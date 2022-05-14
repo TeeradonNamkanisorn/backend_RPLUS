@@ -1,6 +1,9 @@
 const Sequelize = require('sequelize');
+require('dotenv').config();
 
-const sequelize = new Sequelize('remote', 'root', '19731973', {
+const PASSWORD = process.env.PASSWORD;
+
+const sequelize = new Sequelize('remote', 'root', PASSWORD, {
   dialect: 'mysql',
 });
 

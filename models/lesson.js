@@ -1,17 +1,21 @@
-const Sequelize = require('sequelize');
+const {Sequelize, DataTypes} = require('sequelize');
 const sequelize = require('../utils/database');
 
 const Lesson = sequelize.define('lesson', {
     title: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         allowNull: false
     }, 
     url: {
-        type: Sequelize.TEXT
+        type: DataTypes.TEXT
     },
     id: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        allowNull: false
+    },
+    index: {
+        type: DataTypes.INTEGER,
         allowNull: false
     }
 });

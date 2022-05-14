@@ -20,7 +20,11 @@ const User = sequelize.define('user', {
     id: {
         type: Sequelize.STRING,
         primaryKey: true
+    },
+    role: {
+        type: Sequelize.ENUM('teacher', 'student')
     }
 });
 
 module.exports = User;
+//

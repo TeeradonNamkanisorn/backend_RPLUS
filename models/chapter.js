@@ -6,8 +6,9 @@ const Chapter = sequelize.define('chapter', {
         type: Sequelize.STRING,
         allowNull: false
     }, 
-    index: {
-        type: Sequelize.INTEGER
+    chapterIndex: {
+        type: Sequelize.INTEGER,
+        allowNull: false
     },
     id: {
         type: Sequelize.STRING,

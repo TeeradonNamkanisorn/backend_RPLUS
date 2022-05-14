@@ -9,12 +9,16 @@ const Course = sequelize.define('course', {
 
     },
     name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
     },
     imageLink: {
         type: Sequelize.STRING
     },
     videoLink: {
+        type: Sequelize.STRING
+    },
+    description: {
         type: Sequelize.STRING
     }
 
