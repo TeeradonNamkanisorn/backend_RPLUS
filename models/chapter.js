@@ -1,22 +1,22 @@
-const Sequelize = require('sequelize');
+const {Sequelize, DataTypes} = require('sequelize');
 const sequelize = require('../utils/database');
 
 const Chapter = sequelize.define('chapter', {
     name: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         allowNull: false
     }, 
     chapterIndex: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     id: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         primaryKey: true,
         allowNull: false
     },
     description: {
-        type: Sequelize.TEXT
+        type: DataTypes.TEXT
     }
 });
 

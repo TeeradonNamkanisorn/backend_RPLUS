@@ -6,17 +6,17 @@ const Lesson = sequelize.define('lesson', {
         type: DataTypes.STRING,
         allowNull: false
     }, 
-    url: {
-        type: DataTypes.TEXT
-    },
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         primaryKey: true,
         allowNull: false
     },
-    index: {
+    lessonIndex: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    lessonType: {
+        type: DataTypes.ENUM("document", "video", "link", "assignment")
     }
 });
 

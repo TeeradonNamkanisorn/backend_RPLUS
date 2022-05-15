@@ -1,18 +1,21 @@
 const Chapter = require("./chapter");
-const Course = require("./course");
-const DocumentLesson = require("./document");
-const Lesson = require("./lesson");
 const Teacher = require("./teacher");
 const User = require("./user");
+const Course = require('./course');
+const DocumentLesson = require("./document")
 const VideoLesson = require("./videoLesson");
-const sequelize = require('../utils/database')
+const Lesson = require('./lesson');
+const sequelize = require('../utils/database');
+const {DataTypes} = require('sequelize');
+
+
 
 
 User.hasOne(Teacher);
 Teacher.belongsTo(User)
-//
-Chapter.hasMany(Lesson);
+
 Lesson.belongsTo(Chapter);
+Chapter.hasMany(Lesson);
 
 VideoLesson.belongsTo(Lesson);
 Lesson.hasOne(VideoLesson);
@@ -30,5 +33,11 @@ Course.belongsTo(Teacher, {
 Teacher.hasMany(Course, {
     foreignKey: {allowNull: false}
 });
+
+console.log("-------")
+
+// Lesson = {}
+
+
 
 module.exports = {Chapter, Course, DocumentLesson, Lesson, Teacher, User, VideoLesson, sequelize};

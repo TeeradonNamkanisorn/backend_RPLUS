@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+const {Sequelize, DataTypes} = require('sequelize');
 const sequelize = require('../utils/database');
 
 const VideoLesson = sequelize.define('videoLesson', {
@@ -7,12 +7,16 @@ const VideoLesson = sequelize.define('videoLesson', {
         allowNull: false
     }, 
     url: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
+        allowNull: false
     },
     id: {
         type: Sequelize.STRING,
         primaryKey: true,
         allowNull: false
+    }, 
+    description: {
+        type: DataTypes.TEXT,
     }
 });
 
