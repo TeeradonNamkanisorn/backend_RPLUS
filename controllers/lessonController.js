@@ -3,11 +3,12 @@ const Course = require("../models/course");
 const jwt = require('jsonwebtoken');
 const {v4 : uuidv4} = require('uuid');
 
+
 module.exports.verifyLesson = async (req, res, next) => {
     //PAYLOAD : {title, lessonType, chapterId, index}
     //Headers: {authorization: "BEARER TOKEN"}
     try {
-        const {title, lessonType, chapterId} = req.body;
+        const chapterId = req.headers["chapterid"];
         const id = uuidv4();
         const token = req.headers.authorization?.split(" ")[1];
         const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
@@ -15,6 +16,7 @@ module.exports.verifyLesson = async (req, res, next) => {
         if (!decoded || !userId) createError("Invalid token", 401);
         if (role !== "teacher") createError("You are not authorized", 403);
 
+        console.log(req.headers);
         //Find the creator of the lesson
         const chapter = await Chapter.findByPk(chapterId);
         const courseId = chapter.courseId;
