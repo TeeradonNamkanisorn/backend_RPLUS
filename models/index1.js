@@ -9,8 +9,6 @@ const sequelize = require('../utils/database');
 const {DataTypes} = require('sequelize');
 
 
-
-
 User.hasOne(Teacher);
 Teacher.belongsTo(User)
 
