@@ -11,12 +11,9 @@ const teacherRouter = express.Router();
 
 teacherRouter.post('/', teacherController.registerTeacher)
 
-teacherRouter.post("/createCourse", teacherController.createCourse);
 
-teacherRouter.post("/appendChapter", teacherController.appendChapter);
 
-teacherRouter.post('/insertChapter', teacherController.insertChapterByIndex);
 
-teacherRouter.post('/appendLesson', teacherController.appendLesson)
+
 
 module.exports = teacherRouter;

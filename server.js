@@ -1,7 +1,7 @@
 const express = require('express');
 // const sequelize = require('./utils/database');
-const { chapterRouter } = require('./routes/chapterRouter');
-const { lessonRouter } = require('./routes/lessonRouter');
+const chapterRouter = require('./routes/chapterRouter');
+const lessonRouter = require('./routes/lessonRouter');
 const courseRouter = require('./routes/courseRouter');
 const teacherRouter = require('./routes/teacherRouter');
 
