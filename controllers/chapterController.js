@@ -31,7 +31,7 @@ exports.appendChapter = async (req, res, next) => {
         if (role !== "teacher") {
             return res.status(400).send("You are not authorised to create this resource.");
         }
-
+        //Find the index of the highest chapter then add it by one to get the new chapter's index
         const max_index = await Chapter.max('chapterIndex', {where: {courseId}});
         const new_index = max_index? max_index+1 : 1;
         const result = await Chapter.create({name, chapterIndex: new_index, description, id, courseId});
@@ -64,8 +64,8 @@ exports.insertChapterByIndex = async (req, res, next) => {
         if (!user) createError("User Id not found", 400);
         if (role !== "teacher") createError("Only teachers are authorized to edit the resource", 403);
 
-        //To insert a chapter in-between other chapters, add indexes to chapters after by 1
-
+        //To insert a chapter in-between, increase the index of chapters beyond the current by 1
+        //Op.gte = greater or equal
         const result = await Chapter.increment({chapterIndex: 1}, {where: {
             chapterIndex: {
                 [Op.gte]: index

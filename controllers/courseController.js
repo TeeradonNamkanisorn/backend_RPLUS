@@ -5,38 +5,44 @@ const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 
-exports.createCourse = async (req, res, next) => {
-    // PAYLOAD required
-// HEADERS: {authorization: BEARER __TOKEN} : TOKEN WITH USER_ID, ROLE, USERNAME AND EMAIL
-// BODY: {name, description, teacherId}
-try {
-    const {name,description} = req.body;
-    const header = req.headers;
-    const token = header.authorization.split(' ')[1];
-    let decoded
+exports.validateCourseParams = async (req, res, next) => {
+    
     try {
-        decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-    } catch(err) {
-        next(err)
+        const validLevels = ["all", "beginner", "intermediate", "advanced"]
+        if (req.headers.name.length > 0) createError("Course name can't be empty");
+        if (!validLevels.includes(req.headers.level)) createError("Invalid course level");
+        //If there's any white space before or after coursename, trim them.
+        req.headers.name = req.headers.name?.trim();
+        next();
+    } catch (error) {
+        next(error);
     }
+}
 
+exports.createCourse = async (req, res, next) => {
+// PAYLOAD required
+// HEADERS: {authorization: BEARER __TOKEN} : TOKEN WITH USER_ID, ROLE, USERNAME AND EMAIL
+// MUST BE AUTHENTICATED TO BE ABLE TO ACCESS REQ.USER
+try {
+    const {name,description,level} = req.headers;
 
-    const {userId, role} = decoded;
+    const {id: userId} = req.user;
 
-    if (role !== "teacher") {
-        return res.status(400).send("You are not authorised to create this resource.");
-    }
+    const imageUrl = req.imageData.url;
+    const videoUrl = req.videoData.url;
 
-    const teacher = await Teacher.findByPk(userId);
-
-    if (!teacher) {
-        return res.status(404).json({message: "User not found"});
-    }
-
-    const result = await Course.create({name, description, teacherId: userId, id: uuidv4()});
+    const result = await Course.create({name, description, teacherId: userId, id: uuidv4(), level, imageLink: imageUrl, videoLink: videoUrl});
 
     res.send(result);
 } catch(err) {
  next(err)
 }
 };
+
+exports.getCourseInfo = async (req, res, next) => {
+    const courseId = req.params.id;
+    const course = await Course.findByPk(courseId);
+
+    const {id, name, imageLink, videoLink, description, level, createdAt, updatedAt, teacherId, price, length} = course;
+    res.json({course});
+}

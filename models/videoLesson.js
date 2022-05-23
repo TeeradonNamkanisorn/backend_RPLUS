@@ -17,6 +17,10 @@ const VideoLesson = sequelize.define('videoLesson', {
     }, 
     description: {
         type: DataTypes.TEXT,
+    },
+    length: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
     }
 });
 

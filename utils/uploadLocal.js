@@ -2,7 +2,7 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 const destinationCallback = (req, file, setDes) => {
-    setDes(null, "./videos");
+    setDes(null, "./media");
 }
 
 const filenameCallback = (req, file, setFileName) => {

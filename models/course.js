@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize');
+const {Sequelize, DataTypes} = require('sequelize');
 const sequelize = require('../utils/database');
 
 const Course = sequelize.define('course', {
@@ -6,11 +6,11 @@ const Course = sequelize.define('course', {
         type: Sequelize.STRING,
         primaryKey: true,
         allowNull: false
-
     },
     name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     imageLink: {
         type: Sequelize.STRING
@@ -20,6 +20,23 @@ const Course = sequelize.define('course', {
     },
     description: {
         type: Sequelize.STRING
+    },
+    level: {
+        type: DataTypes.ENUM('all', 'beginner', 'intermediate', 'advanced'),
+        defaultValue: "all"
+    },
+    price: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0
+    },
+    length: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+    },
+    isPublished: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 
 })

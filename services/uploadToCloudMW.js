@@ -1,15 +1,15 @@
 const cloudinary = require('cloudinary');
+const { clearMediaLocal } = require('./clearFolder');
 require('dotenv').config();
 
-const key = process.env.CLOUNDINARY_API_KEY;
 
 cloudinary.config({ 
     cloud_name: process.env.CLOUD_NAME, 
-    api_key: key, 
+    api_key: process.env.CLOUNDINARY_API_KEY, 
     api_secret: process.env.CLOUNDINARY_API_SECRET 
   });
-  
-  const cd_upload_promise = (filepath, filename) => {
+  //OPTIONAL: WRAPPING INSIDE A PROMISE
+  const vid_upload_promise = (filepath, filename) => {
       return new Promise((resolve, reject) => {
           cloudinary.v2.uploader.upload(filepath, {public_id: filename,resource_type: "video", chunk_size: 500000000}, (err, result) => {
               if (err) {
@@ -20,13 +20,43 @@ cloudinary.config({
             })
         })
     };
-    
+    const img_upload_promise = (filepath, filename) => {
+        return new Promise((resolve, reject) => {
+            cloudinary.v2.uploader.upload(filepath, {public_id: filename}, (err, result) => {
+                if (err) {
+                    reject(err)
+                  } else {
+                      resolve(result);
+                  }
+              })
+          })
+    }
+
+    const uploadVidAndImageToCloud = async (req, res, next) => {
+        try {
+            const img_prom = img_upload_promise(req.files["preview-image"][0].path, req.files["preview-image"][0].filename);
+            const vid_prom = vid_upload_promise(req.files["preview-video"][0].path, req.files["preview-video"][0].filename);
+
+            const result = await Promise.all([img_prom, vid_prom]);
+            console.log(result); //
+            req.imageData = result[0];
+            req.videoData = result[1];
+
+            clearMediaLocal();
+            next();
+        } catch (err) {
+            next(err);
+        }
+    }
+
+
     //req.file, added my multer, is required for this middleware to upload.
   const uploadVideoToCloud = async(req, res, next) => {
      try {
-        const result = await cd_upload_promise(req.file.path, req.file.filename);
+        const result = await vid_upload_promise(req.file.path, req.file.filename);
         req.uploadData = result;
-        req.uploadedFileType = "video"
+        req.uploadedFileType = "video";
+        clearMediaLocal();
         next()
      } catch (err) {
          next(err)
@@ -68,7 +98,7 @@ cloudinary.config({
 //     "rotation": 0,
 //     "original_filename": "8da12762-7675-4855-b88f-d2bca3192f13sunrise_cloud",
 //     "nb_frames": 1780,
-//     "api_key": "229695598955662"
+//     "api_key": "SECRET1111111"
 // }
 
-  module.exports = {uploadVideoToCloud};
+  module.exports = {uploadVideoToCloud, uploadVidAndImageToCloud };
