@@ -23,7 +23,7 @@ app.use(
   );
 
 
-app.use('/chapter', chapterRouter);
+app.use('/chapter',chapterRouter);
 app.use('/lesson', lessonRouter);
 app.use('/course', courseRouter);
 app.use('/teacher', teacherRouter);

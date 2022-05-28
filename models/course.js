@@ -15,7 +15,13 @@ const Course = sequelize.define('course', {
     imageLink: {
         type: Sequelize.STRING
     },
+    imagePublicId: {
+        type: Sequelize.STRING
+    },
     videoLink: {
+        type: Sequelize.STRING
+    },
+    videoPublicId: {
         type: Sequelize.STRING
     },
     description: {

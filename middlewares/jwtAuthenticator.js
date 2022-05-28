@@ -6,8 +6,8 @@ const jwtAuthenticator= (userRole = "all") => async (req, res, next) => {
     //userRole can only be all (no need to specify) or teacher or student
     //token in the header is required
     try {
-        const [prefix, token] = req.headers.authorization?.split(' ');
         console.log(req.headers.authorization);
+        const [prefix, token] = req.headers.authorization?.split(' ');
         if (prefix.toLowerCase() !== "bearer") createError("invalid authorization headers", 401);
         if (!token) createError("token is required, you are unauthorized", 401);
         const decoded = jwt.verify( token, process.env.TOKEN_SECRET);

@@ -10,27 +10,12 @@ exports.appendChapter = async (req, res, next) => {
     // HEADERS: {authorization: BEARER __TOKEN}
     // BODY: {name, description, courseId}
     try {
-        const token = req.headers.authorization.split(' ')[1];
+        
         const {name, description, courseId} = req.body;
         const id = uuidv4();
 
-        const decoded = jwt.verify(token, process.env.TOKEN_SECRET)
-        const {userId, role} = decoded;
-
-        if (!decoded) {
-            return res.status(404).json({message: "Invalid token"})
-        }
-
-        const user = await User.findByPk(userId);
-
-
-        if (!user) {
-            return res.status(404).json({message: "Invalid token, you are unauthorized"});
-        };
-
-        if (role !== "teacher") {
-            return res.status(400).send("You are not authorised to create this resource.");
-        }
+       const course = await Course.findByPk(courseId);
+       if (course.teacherId !== req.user.id) createError("You are unauthorized", 403);
         //Find the index of the highest chapter then add it by one to get the new chapter's index
         const max_index = await Chapter.max('chapterIndex', {where: {courseId}});
         const new_index = max_index? max_index+1 : 1;
@@ -79,3 +64,7 @@ exports.insertChapterByIndex = async (req, res, next) => {
        next(err)
    }
 };
+
+exports.getChapter = (req, res, next) => {
+    
+}

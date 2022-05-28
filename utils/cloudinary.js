@@ -1,5 +1,7 @@
-const cloudinary = require('cloudinary');
-const { clearMediaLocal } = require('./clearFolder');
+const cloudinary = require('cloudinary').v2;
+const { clearMediaLocal } = require('../services/clearFolder');
+const {v4 : uuidv4} = require('uuid');
+const util = require('util');
 require('dotenv').config();
 
 
@@ -9,9 +11,9 @@ cloudinary.config({
     api_secret: process.env.CLOUNDINARY_API_SECRET 
   });
   //OPTIONAL: WRAPPING INSIDE A PROMISE
-  const vid_upload_promise = (filepath, filename) => {
+  const vid_upload_promise = (filepath) => {
       return new Promise((resolve, reject) => {
-          cloudinary.v2.uploader.upload(filepath, {public_id: filename,resource_type: "video", chunk_size: 500000000}, (err, result) => {
+          cloudinary.uploader.upload(filepath, {resource_type: "video", chunk_size: 500000000}, (err, result) => {
               if (err) {
                   reject(err)
                 } else {
@@ -20,22 +22,16 @@ cloudinary.config({
             })
         })
     };
-    const img_upload_promise = (filepath, filename) => {
-        return new Promise((resolve, reject) => {
-            cloudinary.v2.uploader.upload(filepath, {public_id: filename}, (err, result) => {
-                if (err) {
-                    reject(err)
-                  } else {
-                      resolve(result);
-                  }
-              })
-          })
-    }
+    const img_upload_promise = util.promisify(cloudinary.uploader.upload);
+    
+    const destroy = util.promisify(cloudinary.uploader.destroy);
 
-    const uploadVidAndImageToCloud = async (req, res, next) => {
+    
+
+    const uploadVidAndImageToCloudMW = async (req, res, next) => {
         try {
-            const img_prom = img_upload_promise(req.files["preview-image"][0].path, req.files["preview-image"][0].filename);
-            const vid_prom = vid_upload_promise(req.files["preview-video"][0].path, req.files["preview-video"][0].filename);
+            const img_prom = img_upload_promise(req.files["preview-image"][0].path);
+            const vid_prom = vid_upload_promise(req.files["preview-video"][0].path, uuidv4());
 
             const result = await Promise.all([img_prom, vid_prom]);
             console.log(result); //
@@ -48,10 +44,37 @@ cloudinary.config({
             next(err);
         }
     }
+    //Can upload either or both
+    const uploadEitherOrBothVideoAndImageToCloudMW = async (req, res, next) => {
+        try {
+            let img_prom = Promise.resolve(null);
+            let vid_prom = Promise.resolve(null);
+           
+            if (req.files["preview-image"]) {
+                img_prom = img_upload_promise(req.files["preview-image"][0].path);
+            }
+
+            if (req.files["preview-video"]) {
+                vid_prom = vid_upload_promise(req.files["preview-video"][0].path);
+            }
+
+            const result = await Promise.all([img_prom, vid_prom]);
+
+            req.imageData = result[0];
+            req.videoData = result[1];
+
+            console.log("upload success");
+
+            next();
+
+        } catch (error) {
+            next(error)
+        }
+    }
 
 
     //req.file, added my multer, is required for this middleware to upload.
-  const uploadVideoToCloud = async(req, res, next) => {
+  const uploadVideoToCloudMW = async(req, res, next) => {
      try {
         const result = await vid_upload_promise(req.file.path, req.file.filename);
         req.uploadData = result;
@@ -101,4 +124,5 @@ cloudinary.config({
 //     "api_key": "SECRET1111111"
 // }
 
-  module.exports = {uploadVideoToCloud, uploadVidAndImageToCloud };
+
+  module.exports = { cloudinary ,uploadVideoToCloudMW, uploadVidAndImageToCloudMW, uploadEitherOrBothVideoAndImageToCloudMW, destroy};

@@ -10,6 +10,9 @@ const VideoLesson = sequelize.define('videoLesson', {
         type: Sequelize.TEXT,
         allowNull: false
     },
+    videoPublicId: {
+        type: Sequelize.STRING
+    },
     id: {
         type: Sequelize.STRING,
         primaryKey: true,

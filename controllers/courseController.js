@@ -4,15 +4,18 @@ const jwt = require('jsonwebtoken');
 const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models/index1');
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
+const { destroy } = require('../utils/cloudinary');
+
+const { clearMediaLocal } = require('../services/clearFolder');
 
 exports.validateCourseParams = async (req, res, next) => {
     
     try {
         const validLevels = ["all", "beginner", "intermediate", "advanced"]
-        if (req.headers.name.length > 0) createError("Course name can't be empty");
-        if (!validLevels.includes(req.headers.level)) createError("Invalid course level");
+        if (req.body.name.length > 0) createError("Course name can't be empty");
+        if (!validLevels.includes(req.body.level)) createError("Invalid course level");
         //If there's any white space before or after coursename, trim them.
-        req.headers.name = req.headers.name?.trim();
+        req.body.name = req.body.name?.trim();
         next();
     } catch (error) {
         next(error);
@@ -24,14 +27,15 @@ exports.createCourse = async (req, res, next) => {
 // HEADERS: {authorization: BEARER __TOKEN} : TOKEN WITH USER_ID, ROLE, USERNAME AND EMAIL
 // MUST BE AUTHENTICATED TO BE ABLE TO ACCESS REQ.USER
 try {
-    const {name,description,level} = req.headers;
+    const {name,description,level} = req.body;
 
     const {id: userId} = req.user;
 
-    const imageUrl = req.imageData.url;
-    const videoUrl = req.videoData.url;
+    const imageUrl = req.imageData.secure_url;
+    const videoUrl = req.videoData.secure_url;
 
-    const result = await Course.create({name, description, teacherId: userId, id: uuidv4(), level, imageLink: imageUrl, videoLink: videoUrl});
+    const result = await Course.create({name, description, teacherId: userId, id: uuidv4(), level, imageLink: imageUrl, videoLink: videoUrl,
+    imagePublicId: req.imageData.public_id, videoPublicId: req.imageData.public_id});
 
     res.send(result);
 } catch(err) {
@@ -40,9 +44,60 @@ try {
 };
 
 exports.getCourseInfo = async (req, res, next) => {
-    const courseId = req.params.id;
-    const course = await Course.findByPk(courseId);
+    try {
+        const courseId = req.params.id;
+        const course = await Course.findByPk(courseId);
+    
+        const {id, name, imageLink, videoLink, description, level, createdAt, updatedAt, teacherId, price, length} = course;
+        res.json({course});
+    } catch (error) {
+        next(error)
+    }
+}
 
-    const {id, name, imageLink, videoLink, description, level, createdAt, updatedAt, teacherId, price, length} = course;
-    res.json({course});
+exports.updateCourse = async (req, res, next) => {
+    try {
+
+        const {name,description,level} = req.body;
+
+        const {id: userId} = req.user;
+        const {courseId} = req.params;
+    
+        const imageUrl = req.imageData?.secure_url;
+        const videoUrl = req.videoData?.secure_url;
+    
+    
+    
+        const course = await Course.findOne({where: {id: courseId} });
+    
+        if (!course) createError("course not found");
+        if (course.teacherId !== userId) createError("you are not authorized to edit", 403);
+      
+       
+        if (course.imageLink) {
+            const result = await destroy(course.imagePublicId)
+           
+        }
+    
+        if (course.videoLink) {
+            console.log(`public id to delete: ${course.videoPublicId}`);
+            const result = await destroy(course.videoPublicId, {resource_type: "video"});
+        }
+    
+        course.imageLink = imageUrl;
+        course.videoLink = videoUrl;
+        course.imagePublicId = req.imageData.public_id;
+        course.videoPublicId = req.videoData.public_id;
+        course.name = name;
+        course.description = description;
+        course.level = level
+    
+        const result = await course.save();
+    
+        clearMediaLocal();
+    
+        res.send({result: "success"});
+    } catch (error) {
+        
+    }
 }

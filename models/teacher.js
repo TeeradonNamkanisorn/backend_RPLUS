@@ -19,6 +19,9 @@ const Teacher = sequelize.define('teacher', {
     imageUrl: {
         type: Sequelize.STRING
     },
+    imagePublicId: {
+        type: Sequelize.STRING
+    },
     id: {
         type: Sequelize.STRING,
         primaryKey: true

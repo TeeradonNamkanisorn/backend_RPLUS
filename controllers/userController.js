@@ -18,7 +18,7 @@ module.exports.loginUser = async (req, res, next) => {
         const compareResult = await bcrypt.compare(password, user.password);
         if (!compareResult) return res.status(400).json({message: "Incorrect username or password"})
         
-        const token = jwt.sign({username: user.username, userId: user.id, email: user.email, role: user.role}, process.env.TOKEN_SECRET, 
+        const token = jwt.sign({userId: user.id, email: user.email, role: user.role}, process.env.TOKEN_SECRET, 
             {expiresIn: "30d"});
 
         res.send({username: user.username, userId:user.id, email: user.email, token, role: user.role });
