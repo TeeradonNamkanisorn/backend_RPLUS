@@ -1,5 +1,6 @@
 const {Sequelize, DataTypes} = require('sequelize');
 const sequelize = require('../utils/database');
+// const sequelize = require('../utils/seq2')
 
 const Lesson = sequelize.define('lesson', {
     title: {

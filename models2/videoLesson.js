@@ -3,18 +3,18 @@ const sequelize = require('../utils/database');
 
 const VideoLesson = sequelize.define('videoLesson', {
     title: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         allowNull: false
     }, 
     url: {
-        type: Sequelize.TEXT,
+        type: DataTypes.TEXT,
         allowNull: false
     },
     videoPublicId: {
-        type: Sequelize.STRING
+        type: DataTypes.STRING
     },
     id: {
-        type: Sequelize.STRING,
+        type: DataTypes.STRING,
         primaryKey: true,
         allowNull: false
     }, 
@@ -22,7 +22,7 @@ const VideoLesson = sequelize.define('videoLesson', {
         type: DataTypes.TEXT,
     },
     length: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         defaultValue: 0
     }
 });

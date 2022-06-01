@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const {v4 : uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
-const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models/index1');
+const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models2/index1');
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 
@@ -65,6 +65,24 @@ exports.insertChapterByIndex = async (req, res, next) => {
    }
 };
 
-exports.getChapter = (req, res, next) => {
+exports.getAllChapters = async (req, res, next) => {
+    try {
+        const {courseId} = req.params;
+
     
+        const chapters = await Chapter.findAll({where: {courseId},
+        order: [
+            ['chapterIndex', 'ASC']
+        ]});
+    
+        const course = await Course.findByPk(courseId);
+        const teacher = await course.getTeacher();
+    
+        if (teacher.id !== req.user.id) createError("You are not authorized to view this resource", 403);
+    
+        res.json({chapters: JSON.parse(JSON.stringify(chapters))});
+    
+    } catch (err) {
+        next(err);
+    }
 }

@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const {v4 : uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
-const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models/index1');
+const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models2/index1');
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 const { destroy } = require('../utils/cloudinary');
@@ -73,21 +73,25 @@ exports.updateCourse = async (req, res, next) => {
         if (!course) createError("course not found");
         if (course.teacherId !== userId) createError("you are not authorized to edit", 403);
       
-       
-        if (course.imageLink) {
+       // If we want to replace the existing image url
+        if (course.imageLink && req.imageData?.secure_url) {
             const result = await destroy(course.imagePublicId)
-           
+            course.imagePublicId = req.imageData?.public_id ;
+            course.imageLink = imageUrl;
         }
+        //otherwise the imageLink stays the same
     
-        if (course.videoLink) {
+        if (course.videoLink && req.videoData?.secure_url) {
             console.log(`public id to delete: ${course.videoPublicId}`);
             const result = await destroy(course.videoPublicId, {resource_type: "video"});
+            course.videoPublicId = req.videoData?.public_id ;
+            course.videoLink = videoUrl;
         }
     
-        course.imageLink = imageUrl;
-        course.videoLink = videoUrl;
-        course.imagePublicId = req.imageData.public_id;
-        course.videoPublicId = req.videoData.public_id;
+    
+        
+        
+        
         course.name = name;
         course.description = description;
         course.level = level
@@ -98,6 +102,6 @@ exports.updateCourse = async (req, res, next) => {
     
         res.send({result: "success"});
     } catch (error) {
-        
+        next(error)
     }
 }
