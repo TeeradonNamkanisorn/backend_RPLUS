@@ -1,7 +1,7 @@
 const express = require('express');
-const Chapter = require('../models2/chapter');
+
 const { v4: uuidv4 } = require('uuid');
-const Course = require('../models2/course');
+
 const chapterController = require('../controllers/chapterController');
 const jwtAuthenticator = require('../middlewares/jwtAuthenticator');
 

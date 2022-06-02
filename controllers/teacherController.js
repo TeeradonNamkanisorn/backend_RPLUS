@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const {v4 : uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
-const { Course, Teacher, User, Chapter, sequelize, Lesson } = require('../models2/index1');
+const { Course, Teacher, User, Chapter, sequelize, Lesson } = require("../models")
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 

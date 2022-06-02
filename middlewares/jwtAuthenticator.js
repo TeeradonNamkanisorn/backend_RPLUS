@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models2/user');
+const {User} = require('../models');
 const createError = require('../utils/createError');
 
 const jwtAuthenticator= (userRole = "all") => async (req, res, next) => {
     //userRole can only be all (no need to specify) or teacher or student
     //token in the header is required
     try {
-        console.log(req.headers.authorization);
+        if (!req.headers.authorization) createError("token is required");
         const [prefix, token] = req.headers.authorization?.split(' ');
         if (prefix.toLowerCase() !== "bearer") createError("invalid authorization headers", 401);
         if (!token) createError("token is required, you are unauthorized", 401);

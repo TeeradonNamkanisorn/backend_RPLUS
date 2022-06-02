@@ -14,10 +14,7 @@ const {DataTypes} = require('sequelize');
 
 
 User.hasOne(Teacher);
-Teacher.belongsTo(User)
-
-Chapter.belongsTo(Course);
-Course.hasMany(Chapter);
+Teacher.belongsTo(User);
 
 Course.belongsTo(Teacher, {
     foreignKey: {allowNull: false}
@@ -26,6 +23,14 @@ Course.belongsTo(Teacher, {
 Teacher.hasMany(Course, {
     foreignKey: {allowNull: false}
 });
+
+Chapter.belongsTo(Course);
+Course.hasMany(Chapter);
+
+VideoLesson.belongsTo(Lesson);
+Lesson.hasOne(VideoLesson);
+
+
 
 Lesson.belongsTo(Chapter, {
     foreignKey: {
@@ -40,20 +45,27 @@ Chapter.hasMany(Lesson, {
     }
 });
 
-VideoLesson.belongsTo(Lesson);
-Lesson.hasOne(VideoLesson);
+
 
 // Lesson.hasOne(DocumentLesson);
 // DocumentLesson.belongsTo(Lesson);
 
 
 
+// sequelize.sync();
+//
 
+const syncAll = async() => {
+    await User.sync();
+    await Teacher.sync();
+    await Course.sync();
+    await Chapter.sync();
+    await VideoLesson.sync({});
+    await Lesson.sync({});
+}
 
-console.log("before sync")
-Lesson.sync().then(()=> {
-    sequelize.sync({})
-})
+syncAll();
+
 
 
 

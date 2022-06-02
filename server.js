@@ -1,15 +1,16 @@
 const express = require('express');
-// const sequelize = require('./utils/database');
+
 const chapterRouter = require('./routes/chapterRouter');
 const lessonRouter = require('./routes/lessonRouter');
 const courseRouter = require('./routes/courseRouter');
 const teacherRouter = require('./routes/teacherRouter');
+const userRouter = require('./routes/userRouter');
 
 const cors = require('cors');
-const userRouter = require('./routes/userRouter');
 const invalidAddressMW = require('./middlewares/invalidAddressMW');
 const errorHandlerMW = require('./middlewares/errorHandlerMW');
-const {sequelize} = require('./models2/index1');
+
+const {sequelize} = require('./models');
 const { clearMediaLocal } = require('./services/clearFolder');
 
 const app = express();
@@ -46,7 +47,7 @@ app.use((err, req, res, next) => {
 //         console.log("server running on http://localhost:4000")
 //     })
 // ).catch(err => console.log(err));
-
+sequelize.sync()
 app.listen(4000, () => {
   console.log("server running on http://localhost:4000")
 })
