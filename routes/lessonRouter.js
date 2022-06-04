@@ -12,4 +12,6 @@ lessonRouter.post("/video", jwtAuthenticator("teacher"), uploadLocal.single("les
 
 lessonRouter.delete('/video/:lessonId', jwtAuthenticator("teacher"), lessonController.deleteVideoLesson);
 
+lessonRouter.put('/video/:lessonId', jwtAuthenticator("teacher"), uploadLocal.single("lessonVideo"), lessonController.verifyUpdateLesson, uploadVideoToCloudMW, lessonController.updateVideoLesson);
+
 module.exports = lessonRouter;

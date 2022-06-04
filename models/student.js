@@ -1,7 +1,5 @@
-
-
 module.exports = (sequelize, DataTypes) => {
-    const Teacher = sequelize.define("teacher", {
+    const Student = sequelize.define("student", {
         username: {
             type: DataTypes.STRING,
             allowNull: false
@@ -28,14 +26,20 @@ module.exports = (sequelize, DataTypes) => {
         creditCardNumber: {
             type: DataTypes.STRING
         }
-    });
+    })
 
-    Teacher.associate = models => {
-        Teacher.hasMany(models.Course, {
+    Student.associate = (models) => {
+        Student.belongsToMany(models.Course, {
+            through: models.StudentCourse,
+            onDelete: "RESTRICT",
+            onUpdate: "RESTRICT"
+        });
+        Student.belongsToMany(models.Lesson, {
+            through: models.StudentLesson,
             onDelete: "RESTRICT",
             onUpdate: "RESTRICT"
         })
     }
 
-    return Teacher;
+    return Student;
 }

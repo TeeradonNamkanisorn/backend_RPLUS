@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const {v4 : uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
 const { Course, Teacher, User, Chapter, sequelize, Lesson, VideoLesson} = require("../models")
@@ -55,7 +55,8 @@ exports.insertChapterByIndex = async (req, res, next) => {
         const result = await Chapter.increment({chapterIndex: 1}, {where: {
             chapterIndex: {
                 [Op.gte]: index
-            }
+            },
+            id : courseId
         }} );
 
         const newChap = await Chapter.create({name, chapterIndex: index, description, courseId, id});

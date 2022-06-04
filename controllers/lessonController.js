@@ -25,7 +25,7 @@ module.exports.verifyLesson = async (req, res, next) => {
         const teacherId = course.teacherId;
 
         //teacherId and user's primary key: id are the same.
-        if (teacherId !== userId) createError("Invalid token", 403);
+        if (teacherId !== userId) createError("You are forbidden to edit this resource", 403);
 
       
     
@@ -34,6 +34,31 @@ module.exports.verifyLesson = async (req, res, next) => {
 
         // res.send(lesson)
         
+    } catch (err) {
+        next(err)
+    }
+}
+
+module.exports.verifyUpdateLesson = async (req, res, next) => {
+    try {
+        const {lessonId} = req.params;
+        const {title} = req.body;
+        const token = req.headers.authorization?.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+        const {userId, role} = decoded;
+        if (!decoded || !userId) createError("Invalid token", 401);
+        if (role !== "teacher") createError("You are not authorized", 403);
+        if (title) {
+            if (title?.trim() === '') createError('invalid title');
+        }
+        const lesson = await Lesson.findByPk(lessonId); 
+        const chapter = await lesson.getChapter();
+        const course = await chapter.getCourse();
+        const teacher = await course.getTeacher();
+        if (teacher.id !== userId) createError("You are forbidden to edit this resource", 403);
+
+        next();
+
     } catch (err) {
         next(err)
     }
@@ -59,18 +84,21 @@ module.exports.deleteVideoLesson = async (req, res, next) => {
             console.log(result);
         }
 
-        const index = lesson.index;
+        const index = lesson.lessonIndex;
 
-        const deleteResult = await VideoLesson.destroy({where: {id: videoLesson.id}}, {transaction: t});
-        await Lesson.destroy({where: {id: lessonId}})
+        const deleteResult = await VideoLesson.destroy({where: {id: videoLesson.id}, transaction: t});
+        await Lesson.destroy({where: {id: lessonId}, transaction: t})
 
         //Decrease indexes by 1 for chapters after
+        
         const result = await Lesson.increment({lessonIndex: -1}, {where: {
             lessonIndex: {
                 [Op.gte]: index
-            }
-        }}, {transaction: t} );
+            },
+            id: lesson.chapterId
+        }, transaction : t },  );
         await t.commit();
+        console.log(result);
         res.json({message: "deleted successfully"});
     
     } catch (error) {
@@ -84,16 +112,23 @@ module.exports.appendVideoLesson = async (req, res, next) => {
         const {title, chapterId, description} = req.body;
         console.log(req.uploadData);
 
+        //req.upload data is parsed by the cloudinary upload middleware
         const url = req.uploadData.secure_url;
         //in seconds
         const duration = req.uploadData.duration;
         const videoPublicId = req.uploadData.public_id;
+
+        //No need no get lesson type through body since path is exclusive to video lessons only
         const lessonType = req.uploadedFileType;
-        const maxIndex = await Lesson.max('lessonIndex', {where: {chapterId}});
-        const newIndex = (maxIndex || 0)+1;
         const id = uuidv4();
+        const maxIndex = await Lesson.max('lessonIndex', {where: {chapterId}});
+
+        const chapter = await Chapter.findOne({where: {id: chapterId}});
+        const courseId = chapter.courseId;
+
+        const newIndex = (maxIndex || 0)+1;
     
-        const lesson = await Lesson.create({title, id, lessonIndex: newIndex, lessonType, chapterId});
+        const lesson = await Lesson.create({title, id, lessonIndex: newIndex, lessonType, chapterId, courseId});
         const videoLesson = await VideoLesson.create({title, url, id, description, lessonId: id, duration, videoPublicId});
         console.log(videoLesson.url)
         res.json({lesson: {
@@ -110,3 +145,47 @@ module.exports.appendVideoLesson = async (req, res, next) => {
         next(error)
     }
 };
+
+exports.updateVideoLesson = async (req, res, next) => {
+    //params: lessonId
+    const t = await sequelize.transaction();
+    try {
+        const {title, description} = req.body;
+        const url = req.uploadData?.secure_url;
+        const duration = req.uploadData?.duration;
+        const videoPublicId = req.uploadData?.public_id;
+        const lessonType = req.uploadedFileType;
+        const lessonId = req.params.lessonId;
+        
+        const lesson = await Lesson.findByPk(lessonId, {transaction: t});
+        const videoLesson = await VideoLesson.findByPk(lessonId, {transaction: t});
+
+        console.log(videoLesson.videoPublicId);
+        if (videoLesson.videoPublicId && req.uploadData) {
+            const result = await destroy(videoLesson.videoPublicId, {resource_type: "video"});
+            console.log(result);
+        } else if (!videoLesson.videoPublicId) {
+            createError("A video lesson must have a public id", 500);
+        }
+
+        // Description is inside the video lesson
+        await Lesson.update({title},{ where:{id: lessonId}, transaction: t});
+        await VideoLesson.update({title, description, url, videoPublicId, duration}, {where: {id : lessonId}, transaction: t});
+
+        res.status(200).json({lesson: {
+            title,
+            chapterId: lesson.chapterId,
+            id: lesson.id,
+            description,
+            url,
+            lessonType,
+            videoPublicId,
+            duration
+        }})
+        await t.commit();
+
+    } catch (err) {
+        await t.rollback();
+        next(err)
+    }
+}

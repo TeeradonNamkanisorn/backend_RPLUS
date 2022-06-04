@@ -30,11 +30,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ENUM('all', 'beginner', 'intermediate', 'advanced'),
             defaultValue: "all"
         },
-        price: {
-            type: DataTypes.FLOAT,
-            allowNull: false,
-            defaultValue: 0
-        },
         length: {
             type: DataTypes.INTEGER,
             defaultValue: 0
@@ -42,6 +37,10 @@ module.exports = (sequelize, DataTypes) => {
         isPublished: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
+        },
+        price: {
+            type: DataTypes.FLOAT,
+            defaultValue: 10.0
         }
     });
 
@@ -54,6 +53,11 @@ module.exports = (sequelize, DataTypes) => {
             onDelete: "RESTRICT",
             onUpdate: "RESTRICT"
         });
+        Course.belongsToMany(models.Student, {
+            through: models.StudentCourse,
+            onDelete: "RESTRICT",
+            onUpdate: "RESTRICT"
+        })
     }
     return Course
 }

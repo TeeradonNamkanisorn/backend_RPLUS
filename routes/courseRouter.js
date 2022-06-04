@@ -7,10 +7,7 @@ const { uploadVidAndImageToCloudMW, uploadEitherOrBothVideoAndImageToCloudMW  } 
 
 
 const courseRouter = express.Router();
-const intercept = (req, res) => {
-    console.log(req.files)
-    res.send("success");
-}
+
 
 
 

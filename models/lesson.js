@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         lessonType: {
             type: DataTypes.ENUM("document", "video", "link", "assignment")
+        },
+        courseId: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     });
     Lesson.associate = (models) => {
@@ -26,6 +30,11 @@ module.exports = (sequelize, DataTypes) => {
             onDelete: "RESTRICT",
             onUpdate: "RESTRICT"
         });
+        Lesson.belongsToMany(models.Student, {
+            through: models.StudentLesson,
+            onDelete: "RESTRICT",
+            onUpdate: "RESTRICT"
+        })
     }
     return Lesson
 }

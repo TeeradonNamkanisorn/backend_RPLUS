@@ -4,7 +4,7 @@ const chapterRouter = require('./routes/chapterRouter');
 const lessonRouter = require('./routes/lessonRouter');
 const courseRouter = require('./routes/courseRouter');
 const teacherRouter = require('./routes/teacherRouter');
-const userRouter = require('./routes/userRouter');
+const authRouter = require('./routes/authRouter');
 
 const cors = require('cors');
 const invalidAddressMW = require('./middlewares/invalidAddressMW');
@@ -12,6 +12,7 @@ const errorHandlerMW = require('./middlewares/errorHandlerMW');
 
 const {sequelize} = require('./models');
 const { clearMediaLocal } = require('./services/clearFolder');
+const jwtAuthenticator = require('./middlewares/jwtAuthenticator');
 
 const app = express();
 
@@ -28,7 +29,8 @@ app.use('/chapter',chapterRouter);
 app.use('/lesson', lessonRouter);
 app.use('/course', courseRouter);
 app.use('/teacher', teacherRouter);
-app.use('/user', userRouter);
+app.use('/auth', authRouter);
+app.use('/student', jwtAuthenticator("student"),courseRouter);
   
 //call clear media local every time after cloudinary upload to free up media storage
 
@@ -42,12 +44,8 @@ app.use((err, req, res, next) => {
 
 
 
-// sequelize.sync({}).then(
-//     app.listen(4000, () => {
-//         console.log("server running on http://localhost:4000")
-//     })
-// ).catch(err => console.log(err));
-sequelize.sync()
+
+sequelize.sync({alter: true})
 app.listen(4000, () => {
   console.log("server running on http://localhost:4000")
 })

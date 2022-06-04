@@ -76,9 +76,13 @@ cloudinary.config({
     //req.file, added my multer, is required for this middleware to upload.
   const uploadVideoToCloudMW = async(req, res, next) => {
      try {
-        const result = await vid_upload_promise(req.file.path, req.file.filename);
+        let result;
+        if (req.file) {
+             result = await vid_upload_promise(req.file.path, req.file.filename
+        );
         req.uploadData = result;
         req.uploadedFileType = "video";
+    }
         clearMediaLocal();
         next()
      } catch (err) {
