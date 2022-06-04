@@ -70,3 +70,20 @@ exports.registerTeacher = async (req, res, next) => {
         next(err);
     }
 }
+
+exports.registerStudent = async (req, res, next) => {
+    try {
+        const {username, email, password} = req.body;
+        const id = uuidv4();
+        const existTeacher = await Teacher.findOne({where: {email}});
+        if (existTeacher) createError("You have already registered as a teacher", 403);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const student = await Student.create({id, username, email, password: hashedPassword});
+        const token = jwt.sign({email, userId: id, role: "student"}, process.env.TOKEN_SECRET);
+        
+        res.json({userId: id, email, token, role: "student"});
+        
+    } catch (err) {
+        next(err)
+    }
+}

@@ -1,6 +1,6 @@
-const { Student, Course, sequelize, studentCourse } = require('../models');
-const studentCourse = require('../models/studentCourse');
-const { v4 : uuidv4 } = require('uuid')
+const { Student, Course, sequelize, StudentCourse, Lesson, VideoLesson, StudentLesson } = require('../models');
+const { v4 : uuidv4 } = require('uuid');
+const createError = require('../utils/createError');
 
 
 
@@ -8,7 +8,7 @@ exports.buyCourse = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
         const studentId = req.user.id;
-        const courseId = req.user.courseId;
+        const courseId = req.params.courseId;
         const id = uuidv4();
         const course = await Course.findOne({where : {
             id: courseId
@@ -16,9 +16,10 @@ exports.buyCourse = async (req, res, next) => {
 
         const price = course.price;
 
-        const studentCourse = await studentCourse.create({id, studentId, courseId, price}, {transaction: t});
+        const studentCourse = await StudentCourse.create({id, studentId, courseId, price}, {transaction: t});
         console.log(studentCourse);
 
+        await t.commit();
         res.status(201).json({
             studentCourse
         })
@@ -28,3 +29,40 @@ exports.buyCourse = async (req, res, next) => {
         next(error)
     }
 };
+
+exports.markLessonComplete = async (req, res, next) => {
+    try {
+        const studentId = req.user.id;
+        const lessonId = req.params.lessonId;
+        const { status } = req.body;
+    
+        const lesson = await Lesson.findOne({where: {
+            id: lessonId
+        }});
+
+        const chapter = await lesson.getChapter();
+        if (!chapter) createError("chapter does not match", 400);
+        const course = await chapter.getCourse();
+        if (!course) createError("course does not match", 400);
+    
+        if (lesson.lessonType !== "video") {
+            createError("Non-video lessons cannot be marked complete manually");
+        }
+    
+        const studentLesson = await StudentLesson.create({
+            studentId,
+            lessonId,
+            status: "COMPLETED",
+            courseId: course.id,
+            id: uuidv4()
+        });
+
+        if (!studentLesson) {
+            createError("student's lesson not found", 400);
+        }
+    
+        res.sendStatus(204);
+    } catch (err) {
+        next(err)
+    }
+}

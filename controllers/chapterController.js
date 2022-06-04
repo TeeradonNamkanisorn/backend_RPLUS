@@ -67,29 +67,29 @@ exports.insertChapterByIndex = async (req, res, next) => {
    }
 };
 
-exports.getAllChapters = async (req, res, next) => {
-    try {
-        const {courseId} = req.params;
+// exports.getAllChapters = async (req, res, next) => {
+//     try {
+//         const {courseId} = req.params;
 
     
-        const chapters = await Chapter.findAll({where: {courseId},
-        include: {
-            model: Lesson,
-            include: {
-                model: VideoLesson
-            }
-        }, 
-        order: [["chapterIndex", "ASC"],[Lesson, "lessonIndex", "ASC"]]
-       });
+//         const chapters = await Chapter.findAll({where: {courseId},
+//         include: {
+//             model: Lesson,
+//             include: {
+//                 model: VideoLesson
+//             }
+//         }, 
+//         order: [["chapterIndex", "ASC"],[Lesson, "lessonIndex", "ASC"]]
+//        });
     
-        const course = await Course.findByPk(courseId);
-        const teacher = await course.getTeacher();
+//         const course = await Course.findByPk(courseId);
+//         const teacher = await course.getTeacher();
     
-        if (teacher.id !== req.user.id) createError("You are not authorized to view this resource", 403);
+//         if (teacher.id !== req.user.id) createError("You are not authorized to view this resource", 403);
         
-        res.json({chapters: JSON.parse(JSON.stringify(chapters))});
+//         res.json({chapters: JSON.parse(JSON.stringify(chapters))});
     
-    } catch (err) {
-        next(err);
-    }
-}
+//     } catch (err) {
+//         next(err);
+//     }
+// }

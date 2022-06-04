@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const {v4 : uuidv4} = require('uuid');
-const { Lesson, Chapter, Course, VideoLesson, sequelize } = require("../models");
+const { Lesson, Chapter, Course, VideoLesson, sequelize, StudentLesson } = require("../models");
 const { Op } = require('sequelize');
 const { destroy } = require('../utils/cloudinary');
 const createError = require('../utils/createError');
@@ -85,7 +85,9 @@ module.exports.deleteVideoLesson = async (req, res, next) => {
         }
 
         const index = lesson.lessonIndex;
-
+        await StudentLesson.destroy({where: {
+            lessonId
+        }, transaction: t});
         const deleteResult = await VideoLesson.destroy({where: {id: videoLesson.id}, transaction: t});
         await Lesson.destroy({where: {id: lessonId}, transaction: t})
 
@@ -98,7 +100,6 @@ module.exports.deleteVideoLesson = async (req, res, next) => {
             id: lesson.chapterId
         }, transaction : t },  );
         await t.commit();
-        console.log(result);
         res.json({message: "deleted successfully"});
     
     } catch (error) {

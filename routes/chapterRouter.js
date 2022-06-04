@@ -11,6 +11,6 @@ chapterRouter.post("/appendChapter", jwtAuthenticator("teacher"), chapterControl
 
 chapterRouter.post('/insertChapter', jwtAuthenticator("teacher"), chapterController.insertChapterByIndex);
 
-chapterRouter.get('/:courseId', jwtAuthenticator("teacher"), chapterController.getAllChapters);
+// chapterRouter.get('/:courseId', jwtAuthenticator("teacher"), chapterController.getAllChapters);
 
 module.exports = chapterRouter;

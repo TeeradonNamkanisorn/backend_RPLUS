@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const {v4 : uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
-const { Course, Teacher, User, Chapter, sequelize, Lesson } = require("../models")
+const { Course, Teacher, User, Chapter, sequelize, Lesson, VideoLesson } = require("../models")
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 const { destroy } = require('../utils/cloudinary');
@@ -46,10 +46,26 @@ try {
 exports.getCourseInfo = async (req, res, next) => {
     try {
         const courseId = req.params.id;
-        const course = await Course.findByPk(courseId);
     
-        const {id, name, imageLink, videoLink, description, level, createdAt, updatedAt, teacherId, price, length} = course;
-        res.json({course});
+        const course = await Course.findOne({where: {id: courseId}});
+        
+        const chapters = await Chapter.findAll({where: {courseId},
+                    include: {
+                        model: Lesson,
+                        include: {
+                            model: VideoLesson
+                        }
+                    }, 
+                    order: [["chapterIndex", "ASC"],[Lesson, "lessonIndex", "ASC"]]
+                   });
+        const teacher = await course.getTeacher();
+        
+        const objCourse = JSON.parse(JSON.stringify(course));
+            if (teacher.id !== req.user.id) createError("You are not authorized to view this resource", 403);
+        res.json({course: {
+            ...objCourse,
+            chapters
+        }});
     } catch (error) {
         next(error)
     }

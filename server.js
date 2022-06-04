@@ -5,6 +5,7 @@ const lessonRouter = require('./routes/lessonRouter');
 const courseRouter = require('./routes/courseRouter');
 const teacherRouter = require('./routes/teacherRouter');
 const authRouter = require('./routes/authRouter');
+const studentRouter  = require('./routes/studentRouter');
 
 const cors = require('cors');
 const invalidAddressMW = require('./middlewares/invalidAddressMW');
@@ -30,7 +31,7 @@ app.use('/lesson', lessonRouter);
 app.use('/course', courseRouter);
 app.use('/teacher', teacherRouter);
 app.use('/auth', authRouter);
-app.use('/student', jwtAuthenticator("student"),courseRouter);
+app.use('/student', jwtAuthenticator("student"), studentRouter);
   
 //call clear media local every time after cloudinary upload to free up media storage
 

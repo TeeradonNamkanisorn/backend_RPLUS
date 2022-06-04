@@ -8,9 +8,6 @@ const teacherRouter = express.Router();
 
 
 
-
-teacherRouter.post('/', authContoller.registerTeacher);
-
 teacherRouter.get('/courses', jwtAuthenticator("teacher"), teacherController.getAllCourses);
 
 
