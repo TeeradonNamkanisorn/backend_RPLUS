@@ -27,6 +27,14 @@ module.exports = (sequelize, DataTypes) => {
         },
         creditCardNumber: {
             type: DataTypes.STRING
+        },
+        firstName: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        lastName: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     });
 

@@ -66,3 +66,35 @@ exports.markLessonComplete = async (req, res, next) => {
         next(err)
     }
 }
+
+exports.validateComplete = async (req, res, next) => {
+    try {
+        const courseId = req.params.courseId;
+        const studentId = req.user.id;
+        //count all of the lessons that the student has completed
+        const { count : lessonsCompleted } = await StudentLesson.findAndCountAll({where: {
+            studentId,
+            courseId,
+            status: "COMPLETED"
+        }});
+        const { count: lessonCount } = await Lesson.findAndCountAll({where : {
+            courseId
+        }});
+        if ( lessonCount === 0) createError("no lessons found");
+        if (lessonsCompleted < lessonCount) createError("You are have not taken all the lessons");
+
+        //student info is already in req.user
+        next();
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+exports.getCertficate = async (req, res, next) => {
+    try {
+        
+    } catch (err) {
+        next(err)
+    }
+}

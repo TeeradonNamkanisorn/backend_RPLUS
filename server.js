@@ -50,3 +50,4 @@ sequelize.sync({alter: true})
 app.listen(4000, () => {
   console.log("server running on http://localhost:4000")
 })
+
