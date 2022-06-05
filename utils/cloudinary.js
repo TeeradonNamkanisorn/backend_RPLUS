@@ -95,7 +95,7 @@ cloudinary.config({
   const uploadPdf = async (req, res, next) => {
       try {
           if (!req?.pdf?.filename) createError("certificate pdf not found", 500);
-          const result = await upload(req.file.filename);
+          const result = await upload(req.pdf.filename, {resource_type: 'image'});
           console.log(result);
           req.certificateData = result;
           next();

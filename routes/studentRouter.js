@@ -6,6 +6,6 @@ router.post('/course/:courseId', studentController.buyCourse);
 
 router.post('/lesson/:lessonId', studentController.markLessonComplete);
 
-router.get('/cert/:lessonId', studentController.validateComplete, studentController.getCertficate, uploadPdf, studentController.sendCertificate )
+router.get('/cert/:courseId', studentController.validateComplete, studentController.getCertficate, uploadPdf, studentController.sendCertificate )
 
 module.exports = router;

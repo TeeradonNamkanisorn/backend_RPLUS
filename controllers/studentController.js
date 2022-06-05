@@ -5,6 +5,7 @@ const ejs = require('ejs');
 const pdf = require('html-pdf');
 const util = require("util");
 const { destroy } = require('../utils/cloudinary');
+const { clearCertificateDir } = require('../services/clearFolder');
 
 const renderFile = util.promisify(ejs.renderFile);
 
@@ -86,6 +87,7 @@ exports.validateComplete = async (req, res, next) => {
     try {
         const courseId = req.params.courseId;
         const studentId = req.user.id;
+        console.log(courseId);
         //count all of the lessons that the student has completed
         const { count : lessonsCompleted } = await StudentLesson.findAndCountAll({where: {
             studentId,
@@ -115,9 +117,12 @@ exports.getCertficate = async (req, res, next) => {
             month: 'long',
             year: 'numeric'
         }
+        //June 6, 2022
         const date = today.toLocaleDateString("jp-JP", dateOptions);
-        const dateNumber = today.toLocaleString("jp-JP", dateOptions);
-        console.log(date);
+        //2022/6/6
+        
+        
+        //Format date to ISO standard.
         const data = await renderFile("views/cert-template.ejs" , {firstName, lastName, date: date} );
         const options = {
                     height: "11.25in",
@@ -132,8 +137,8 @@ exports.getCertficate = async (req, res, next) => {
         const response = await createPdf(data, options);
         // response : {filename: "/Users/admin/projects/fullstack_proj/backend/cert.pdf"}
         if (!response) createError("pdf creation error", 500);
-        req.pdf = {fileName: response.filename}
-        req.date = dateNumber;
+        req.pdf = {filename: response.filename}
+        req.date = today;
         next();
 
     } catch (err) {
@@ -145,22 +150,24 @@ exports.sendCertificate = async (req, res, next) => {
     try {
         const courseId = req.params.courseId;
         const studentId = req.user.id;
-        const studentCourse = StudentCourse.findOne({where: 
+        const studentCourse = await StudentCourse.findOne({where: 
             {
             studentId,
             courseId
         }
         });
+        
         const {certificatePublicId} = studentCourse;
         if (certificatePublicId) {
             const result = await destroy(certificatePublicId);
             console.log(result);
         }
-        if (!req.pdfData.public_id) createError("public id not found");
-        studentCourse.certificatePublicId = req.pdfData.public_id;
-        studentCourse.certificateUrl = req.pdfData.secure_url;
+        if (!req.certificateData.public_id) createError("public id not found");
+        studentCourse.certificatePublicId = req.certificateData.public_id;
+        studentCourse.certificateUrl = req.certificateData.secure_url;
         if (!req.date) createError("NO date has been passed down", 500);
         studentCourse.latestCompletedDate = req.date;
+        console.log(req.date)
         await studentCourse.save();
         res.json({certificate: {
             url: studentCourse.certificateUrl,
@@ -168,5 +175,7 @@ exports.sendCertificate = async (req, res, next) => {
         }})
     } catch (error) {
         next(error)
+    } finally {
+        clearCertificateDir();
     }
 }

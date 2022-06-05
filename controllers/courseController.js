@@ -74,7 +74,7 @@ exports.getCourseInfo = async (req, res, next) => {
 exports.updateCourse = async (req, res, next) => {
     try {
 
-        const {name,description,level} = req.body;
+        const {name,description,level,price} = req.body;
 
         const {id: userId} = req.user;
         const {courseId} = req.params;
@@ -110,7 +110,7 @@ exports.updateCourse = async (req, res, next) => {
         course.name = name;
         course.description = description;
         course.level = level
-    
+        if (price) course.price = price;
         const result = await course.save();
     
         clearMediaLocal();
@@ -120,3 +120,16 @@ exports.updateCourse = async (req, res, next) => {
         next(error)
     }
 }
+
+exports.publicizeCourse = async (req, res, next) => { 
+    try {
+        const courseId = req.params.courseId;
+        const course = await Course.findByPk(courseId);
+        course.isPublished = true;
+        await course.save();
+        res.sendStatus(204);
+    } catch (error) {
+        next(error)
+    }
+ }
+

@@ -16,5 +16,5 @@ courseRouter.get('/:id', jwtAuthenticator("teacher"), courseController.getCourse
 courseRouter.post('/', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadVidAndImageToCloudMW , courseController.createCourse);
 
 courseRouter.put('/:courseId', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadEitherOrBothVideoAndImageToCloudMW , courseController.updateCourse)
-
+courseRouter.patch('/:courseId', jwtAuthenticator("teacher"), courseController.publicizeCourse);
 module.exports = courseRouter;
