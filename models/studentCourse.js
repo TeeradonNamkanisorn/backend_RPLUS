@@ -12,6 +12,12 @@ module.exports = (sequelize, DataTypes) => {
         certificateUrl: {
             type: DataTypes.STRING
         },
+        certificatePublicId: {
+            type: DataTypes.STRING
+        },
+        latestCompletedDate: {
+            type: DataTypes.DATEONLY
+        },
         price: {
             type: DataTypes.FLOAT,
             allowNull: false
@@ -21,5 +27,5 @@ module.exports = (sequelize, DataTypes) => {
             { fields: ['studentId', 'courseId'], unique: true }
           ]
     })
-    return StudentCourse
+    return StudentCourse;
 }

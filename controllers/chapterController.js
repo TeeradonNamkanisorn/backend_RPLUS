@@ -5,7 +5,6 @@ const { Course, Teacher, User, Chapter, sequelize, Lesson, VideoLesson} = requir
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 
-
 exports.appendChapter = async (req, res, next) => {
     // PAYLOAD required
     // HEADERS: {authorization: BEARER __TOKEN}

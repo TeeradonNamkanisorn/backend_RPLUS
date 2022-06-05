@@ -2,6 +2,7 @@ const cloudinary = require('cloudinary').v2;
 const { clearMediaLocal } = require('../services/clearFolder');
 const {v4 : uuidv4} = require('uuid');
 const util = require('util');
+const createError = require('./createError');
 require('dotenv').config();
 
 
@@ -25,6 +26,7 @@ cloudinary.config({
     const img_upload_promise = util.promisify(cloudinary.uploader.upload);
     
     const destroy = util.promisify(cloudinary.uploader.destroy);
+    const upload = util.promisify(cloudinary.uploader.upload);
 
     
 
@@ -90,6 +92,18 @@ cloudinary.config({
      }
   }
 
+  const uploadPdf = async (req, res, next) => {
+      try {
+          if (!req?.pdf?.filename) createError("certificate pdf not found", 500);
+          const result = await upload(req.file.filename);
+          console.log(result);
+          req.certificateData = result;
+          next();
+      } catch (err) {
+          next(err)
+      }
+  }
+
 //  result: {
 //     "asset_id": "c026c11f263d1a2d639393971a739ce5",
 //     "public_id": "8da12762-7675-4855-b88f-d2bca3192f13sunrise_cloud.mp4",
@@ -129,4 +143,7 @@ cloudinary.config({
 // }
 
 
-  module.exports = { cloudinary ,uploadVideoToCloudMW, uploadVidAndImageToCloudMW, uploadEitherOrBothVideoAndImageToCloudMW, destroy};
+  module.exports = {
+       cloudinary ,uploadVideoToCloudMW, uploadVidAndImageToCloudMW,
+        uploadEitherOrBothVideoAndImageToCloudMW, destroy, upload, uploadPdf
+    };

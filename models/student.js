@@ -1,3 +1,4 @@
+//Define unique conditions by indexes
 module.exports = (sequelize, DataTypes) => {
     const Student = sequelize.define("student", {
         username: {
@@ -6,7 +7,6 @@ module.exports = (sequelize, DataTypes) => {
         },
         email: {
             type: DataTypes.STRING,
-            unique: true,
             allowNull: false
         },
         password: {
@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         }
-    })
+    }, {indexes:[{unique:true, fields: ['email']}]})
 
     Student.associate = (models) => {
         Student.belongsToMany(models.Course, {

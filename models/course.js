@@ -1,4 +1,4 @@
-
+//Define unique conditions by indexes
 module.exports = (sequelize, DataTypes) => {
     const Course = sequelize.define("course", {
         id: {
@@ -8,8 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
+            allowNull: false
         },
         imageLink: {
             type: DataTypes.STRING
@@ -42,6 +41,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.FLOAT,
             defaultValue: 10.0
         }
+    }, {
+        indexes:[
+            {unique:true, fields: ['name']
+        }]
     });
 
     Course.associate = (models) => {
