@@ -24,8 +24,6 @@ module.exports.loginUser = async (req, res, next) => {
             role ="";
             createError("incorrect email or password", 400)
         };
-
-        
         
         const compareResult = await bcrypt.compare(password, user.password);
         if (!compareResult) return res.status(400).json({message: "Incorrect username or password"})

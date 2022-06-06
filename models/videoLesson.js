@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         duration: {
             type: DataTypes.FLOAT,
             defaultValue: 0
+        },
+        courseId: {
+            type: DataTypes.STRING,
+            allowNull: false
         }
     });
 

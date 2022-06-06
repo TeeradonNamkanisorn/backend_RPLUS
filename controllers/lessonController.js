@@ -130,8 +130,8 @@ module.exports.appendVideoLesson = async (req, res, next) => {
         const newIndex = (maxIndex || 0)+1;
     
         const lesson = await Lesson.create({title, id, lessonIndex: newIndex, lessonType, chapterId, courseId});
-        const videoLesson = await VideoLesson.create({title, url, id, description, lessonId: id, duration, videoPublicId});
-        console.log(videoLesson.url)
+        const videoLesson = await VideoLesson.create({title, url, id, description, lessonId: id, duration, videoPublicId, courseId});
+        
         res.json({lesson: {
             id: lesson.id,
             title: lesson.title,

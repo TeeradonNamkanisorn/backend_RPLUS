@@ -133,3 +133,39 @@ exports.publicizeCourse = async (req, res, next) => {
     }
  }
 
+ exports.getAllCourse = async (req, res, next) => {
+     try {
+         let courses = await Course.findAll({});
+         const courseIds = courses.map(course => course.id);
+         let totalLength = await VideoLesson.findAll({
+             attributes: [
+                 "courseId",
+                [sequelize.fn('SUM', sequelize.col('duration')), 'duration']
+             ],
+             where: {
+                 courseId: {
+                     [Op.in] : courseIds
+                 }
+             },
+             group: "courseId"
+         });
+
+         totalLength = JSON.parse(JSON.stringify(totalLength))
+         
+         const totalLengthObj = totalLength.reduce( (acc, cur) => {
+             acc[cur.courseId] = cur.duration;
+             return acc
+         },{});
+         console.log(totalLengthObj)
+
+         courses = JSON.parse(JSON.stringify(courses));
+         courses.forEach(course => {
+             course.totalLength = totalLengthObj[course.id] || 0;
+         })
+
+         res.json({courses});
+     } catch (err) {
+         next(err);
+     }
+ }
+
