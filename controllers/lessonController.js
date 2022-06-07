@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 const { destroy } = require('../utils/cloudinary');
 const createError = require('../utils/createError');
 
+
 module.exports.verifyLesson = async (req, res, next) => {
     //PAYLOAD : {title, chapterId}
     //Headers: {authorization: "BEARER TOKEN"}
@@ -26,7 +27,8 @@ module.exports.verifyLesson = async (req, res, next) => {
 
         //teacherId and user's primary key: id are the same.
         if (teacherId !== userId) createError("You are forbidden to edit this resource", 403);
-
+        
+       
       
     
     
@@ -77,6 +79,7 @@ module.exports.deleteVideoLesson = async (req, res, next) => {
         if (!course) createError("course not found", 500);
         if (course.teacherId !== req.user.id) createError("You are not authorized", 403);
 
+        const courseId = course.id;
         const vidPublicId = videoLesson.videoPublicId;
         console.log(videoLesson);
         if (vidPublicId) {
@@ -99,7 +102,12 @@ module.exports.deleteVideoLesson = async (req, res, next) => {
             },
             id: lesson.chapterId
         }, transaction : t },  );
+        
         await t.commit();
+
+        await course.changed('updatedAt', true);
+        await course.save();
+
         res.json({message: "deleted successfully"});
     
     } catch (error) {
@@ -109,6 +117,7 @@ module.exports.deleteVideoLesson = async (req, res, next) => {
 }
 
 module.exports.appendVideoLesson = async (req, res, next) => {
+    const t = await sequelize.transaction();
     try {
         const {title, chapterId, description} = req.body;
         console.log(req.uploadData);
@@ -122,15 +131,24 @@ module.exports.appendVideoLesson = async (req, res, next) => {
         //No need no get lesson type through body since path is exclusive to video lessons only
         const lessonType = req.uploadedFileType;
         const id = uuidv4();
-        const maxIndex = await Lesson.max('lessonIndex', {where: {chapterId}});
+        const maxIndex = await Lesson.max('lessonIndex', {where: {chapterId}, transaction : t});
 
-        const chapter = await Chapter.findOne({where: {id: chapterId}});
+        const chapter = await Chapter.findOne({where: {id: chapterId}, transaction : t});
         const courseId = chapter.courseId;
+        const course = await chapter.getCourse();
 
         const newIndex = (maxIndex || 0)+1;
     
-        const lesson = await Lesson.create({title, id, lessonIndex: newIndex, lessonType, chapterId, courseId});
-        const videoLesson = await VideoLesson.create({title, url, id, description, lessonId: id, duration, videoPublicId, courseId});
+        const lesson = await Lesson.create({title, id, lessonIndex: newIndex, lessonType, chapterId, courseId}, {transaction : t});
+        const videoLesson = await VideoLesson.create({title, url, id, description, lessonId: id, duration, videoPublicId, courseId} , {
+            transaction : t
+        });
+
+        await course.changed('updatedAt', true);
+        await t.commit();
+
+        await course.save();
+        
         
         res.json({lesson: {
             id: lesson.id,
@@ -160,6 +178,9 @@ exports.updateVideoLesson = async (req, res, next) => {
         
         const lesson = await Lesson.findByPk(lessonId, {transaction: t});
         const videoLesson = await VideoLesson.findByPk(lessonId, {transaction: t});
+        const chapter = await lesson.getChapter();
+        const course = await chapter.getCourse();
+        const courseId = course.id
 
         console.log(videoLesson.videoPublicId);
         if (videoLesson.videoPublicId && req.uploadData) {
@@ -173,6 +194,12 @@ exports.updateVideoLesson = async (req, res, next) => {
         await Lesson.update({title},{ where:{id: lessonId}, transaction: t});
         await VideoLesson.update({title, description, url, videoPublicId, duration}, {where: {id : lessonId}, transaction: t});
 
+        await t.commit();
+
+        await course.changed('updatedAt', true);
+        await course.save();
+        
+
         res.status(200).json({lesson: {
             title,
             chapterId: lesson.chapterId,
@@ -183,7 +210,7 @@ exports.updateVideoLesson = async (req, res, next) => {
             videoPublicId,
             duration
         }})
-        await t.commit();
+       
 
     } catch (err) {
         await t.rollback();

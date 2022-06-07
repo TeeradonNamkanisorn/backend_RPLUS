@@ -29,10 +29,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ENUM('all', 'beginner', 'intermediate', 'advanced'),
             defaultValue: "all"
         },
-        length: {
-            type: DataTypes.INTEGER,
-            defaultValue: 0
-        },
         isPublished: {
             type: DataTypes.BOOLEAN,
             defaultValue: false

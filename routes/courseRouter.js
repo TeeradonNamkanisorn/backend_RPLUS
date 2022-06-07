@@ -13,7 +13,7 @@ const courseRouter = express.Router();
 
 courseRouter.get('/:id', jwtAuthenticator("teacher"), courseController.getCourseInfo);
 
-courseRouter.get("/", jwtAuthenticator(), courseController.getAllCourse)
+courseRouter.get("/", jwtAuthenticator("student"),courseController.getAllCourse)
 
 courseRouter.post('/', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadVidAndImageToCloudMW , courseController.createCourse);
 

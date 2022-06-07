@@ -5,8 +5,8 @@ const { Course, Teacher, User, Chapter, sequelize, Lesson, VideoLesson } = requi
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 const { destroy } = require('../utils/cloudinary');
-
 const { clearMediaLocal } = require('../services/clearFolder');
+const { getOwnedCourses } = require('../services/courseServices');
 
 exports.validateCourseParams = async (req, res, next) => {
     
@@ -36,6 +36,7 @@ try {
 
     const result = await Course.create({name, description, teacherId: userId, id: uuidv4(), level, imageLink: imageUrl, videoLink: videoUrl,
     imagePublicId: req.imageData.public_id, videoPublicId: req.imageData.public_id});
+    
 
     res.send(result);
 } catch(err) {
@@ -46,7 +47,7 @@ try {
 exports.getCourseInfo = async (req, res, next) => {
     try {
         const courseId = req.params.id;
-    
+       
         const course = await Course.findOne({where: {id: courseId}});
         
         const chapters = await Chapter.findAll({where: {courseId},
@@ -104,14 +105,17 @@ exports.updateCourse = async (req, res, next) => {
         }
     
     
-        
+
         
         
         course.name = name;
         course.description = description;
         course.level = level
+        course.updatedAt = new Date();
         if (price) course.price = price;
-        const result = await course.save();
+        
+        await course.changed('updatedAt', true);
+        await course.save();
     
         clearMediaLocal();
     
@@ -126,6 +130,7 @@ exports.publicizeCourse = async (req, res, next) => {
         const courseId = req.params.courseId;
         const course = await Course.findByPk(courseId);
         course.isPublished = true;
+        await course.changed('updatedAt', true);
         await course.save();
         res.sendStatus(204);
     } catch (error) {
@@ -135,8 +140,26 @@ exports.publicizeCourse = async (req, res, next) => {
 
  exports.getAllCourse = async (req, res, next) => {
      try {
-         let courses = await Course.findAll({});
+         // get all registered course ids
+         const studentId = req.user.id;
+         const ownIds = await getOwnedCourses(studentId);
+         let courses = await Course.findAll({
+             include: {
+                 model: Teacher,
+                 attributes: ["firstName", "lastName"]
+             },
+             where : {
+                 id : {
+                     [Op.notIn] : ownIds
+                 },
+                 isPublished: true
+             }
+         });
+         //get all the index to find the video lengths in the video lesson table
          const courseIds = courses.map(course => course.id);
+
+
+
          let totalLength = await VideoLesson.findAll({
              attributes: [
                  "courseId",
@@ -151,7 +174,7 @@ exports.publicizeCourse = async (req, res, next) => {
          });
 
          totalLength = JSON.parse(JSON.stringify(totalLength))
-         
+         //An array is returned. To make it easily accessble, transform it to an object.
          const totalLengthObj = totalLength.reduce( (acc, cur) => {
              acc[cur.courseId] = cur.duration;
              return acc
@@ -159,6 +182,7 @@ exports.publicizeCourse = async (req, res, next) => {
          console.log(totalLengthObj)
 
          courses = JSON.parse(JSON.stringify(courses));
+         //set total length key for all the fetched courses
          courses.forEach(course => {
              course.totalLength = totalLengthObj[course.id] || 0;
          })

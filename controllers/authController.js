@@ -41,6 +41,7 @@ module.exports.getUser = async (req, res, next) => {
     try {
         //Validator middleware needs to attach req.user to the request first
         const {userId: id, email, username, role} = req.user;
+        console.log(req.user);
         res.json({id, email, username, role})
     } catch (error) {
         next(error)

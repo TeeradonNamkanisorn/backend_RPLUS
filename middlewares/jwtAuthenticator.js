@@ -17,8 +17,8 @@ const jwtAuthenticator= (userRole = "all") => async (req, res, next) => {
         const decoded = jwt.verify( token, process.env.TOKEN_SECRET);
         
         const {userId, email, role} = decoded;
-        console.log(decoded)
-        console.log(role)
+        // console.log(decoded)
+        // console.log(role)
         let user;
         if ( role === "teacher") {
              user = await Teacher.findOne({where: {id: userId, email}});
@@ -28,9 +28,12 @@ const jwtAuthenticator= (userRole = "all") => async (req, res, next) => {
             createError("invalid user role", 401);
         }
         // create an error if userRole do not match
+        console.log(role, userRole);
         if ((userRole !== "all") && (userRole !== role)) createError("Invalid user role", 403); 
         //any functions that come after can use req.body to get user data
-        req.user = user;
+        const newUser = JSON.parse(JSON.stringify(user));
+        newUser.role = role;
+        req.user = newUser;
     } catch(err) {
         next(err)
     }

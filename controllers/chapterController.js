@@ -9,6 +9,7 @@ exports.appendChapter = async (req, res, next) => {
     // PAYLOAD required
     // HEADERS: {authorization: BEARER __TOKEN}
     // BODY: {name, description, courseId}
+    const t = await sequelize.transaction();
     try {
         
         const {name, description, courseId} = req.body;
@@ -19,12 +20,16 @@ exports.appendChapter = async (req, res, next) => {
         //Find the index of the highest chapter then add it by one to get the new chapter's index
         const max_index = await Chapter.max('chapterIndex', {where: {courseId}});
         const new_index = max_index? max_index+1 : 1;
-        const result = await Chapter.create({name, chapterIndex: new_index, description, id, courseId});
+        const result = await Chapter.create({name, chapterIndex: new_index, description, id, courseId}, {transaction: t});
 
+        await t.commit();
+        await course.changed('updatedAt', true);
+        await course.save();
         res.json(result);
 
 
     } catch (err) {
+        await t.rollback();
         next(err)
     }
 };
@@ -59,6 +64,7 @@ exports.insertChapterByIndex = async (req, res, next) => {
         }} );
 
         const newChap = await Chapter.create({name, chapterIndex: index, description, courseId, id});
+        
 
         res.json(newChap);
    } catch (err) {
