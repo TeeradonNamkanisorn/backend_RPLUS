@@ -52,7 +52,7 @@ exports.registerTeacher = async (req, res, next) => {
     try {
         const saltRounds = 10;
         const salt = await bcrypt.genSalt(saltRounds);
-        const {username, email, password, firstName, lastName} = req.body;
+        const {username, email, password, firstName, lastName, creditCardNumber} = req.body;
         const newId = uuidv4();
         //Must make sure that this email isn't already registered as student
         const existStudent = await Student.findOne({where: {email}});
@@ -60,7 +60,7 @@ exports.registerTeacher = async (req, res, next) => {
         if (existStudent) createError("You have already registered", 403);
         const hashedPassword = await bcrypt.hash(password,salt);
         // const newUser = await User.create({username, email, password: hashedPassword, id: newId, role: 'teacher'});
-        const newTeacher = await Teacher.create({id: newId, username, email, password: hashedPassword, firstName, lastName});
+        const newTeacher = await Teacher.create({id: newId, username, email, password: hashedPassword, firstName, lastName, creditCardNumber});
         const token = jwt.sign({email, userId:newId, role: "teacher"}, process.env.TOKEN_SECRET);
 
         const responseObj = {userId: newTeacher.id, email: newTeacher.email, token, role: "teacher"};

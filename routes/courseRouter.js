@@ -11,12 +11,15 @@ const courseRouter = express.Router();
 
 
 
-courseRouter.get('/:id', jwtAuthenticator("teacher"), courseController.getCourseInfo);
+courseRouter.get('/owned', jwtAuthenticator("student"), courseController.getStudentOwnedCourses)
 
-courseRouter.get("/", jwtAuthenticator("student"),courseController.getAllCourse)
+courseRouter.get("/", jwtAuthenticator("student"),courseController.getAllNotOwnedCourses)
 
 courseRouter.post('/', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadVidAndImageToCloudMW , courseController.createCourse);
 
 courseRouter.put('/:courseId', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadEitherOrBothVideoAndImageToCloudMW , courseController.updateCourse)
+
 courseRouter.patch('/:courseId', jwtAuthenticator("teacher"), courseController.publicizeCourse);
+courseRouter.get('/:id', jwtAuthenticator(), courseController.getCourseInfo);
+
 module.exports = courseRouter;

@@ -6,6 +6,10 @@ const pdf = require('html-pdf');
 const util = require("util");
 const { destroy } = require('../utils/cloudinary');
 const { clearCertificateDir } = require('../services/clearFolder');
+const omise = require('../utils/omise');
+const { USDtoTHB } = require('../services/currencyConverter');
+
+
 
 const renderFile = util.promisify(ejs.renderFile);
 
@@ -18,24 +22,35 @@ const createPdf = (data, options) => new Promise((resolve, reject) => {
 
 
 
-exports.buyCourse = async (req, res, next) => {
+exports.buyCourses = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
         const studentId = req.user.id;
-        const courseId = req.params.courseId;
+        const {courseItems} = req.body;
         const id = uuidv4();
-        const course = await Course.findOne({where : {
-            id: courseId
-        }, transaction: t});
+        // const course = await Course.findOne({where : {
+        //     id: courseId
+        // }, transaction: t});
 
-        const price = course.price;
+        const courseArray = courseItems.map(el => (
+            {
+                id: uuidv4(),
+                studentId,
+                courseId: el.id,
+                price: el.price
+            }
+        ));
+        
+        
+        
+       
 
-        const studentCourse = await StudentCourse.create({id, studentId, courseId, price}, {transaction: t});
-        console.log(studentCourse);
-
+        const studentCourses = await StudentCourse.bulkCreate(courseArray, {transaction: t});
+        console.log(studentCourses);
         await t.commit();
+        
         res.status(201).json({
-            studentCourse
+            studentCourses
         })
 
     } catch (error) {
@@ -178,4 +193,68 @@ exports.sendCertificate = async (req, res, next) => {
     } finally {
         clearCertificateDir();
     }
+}
+
+exports.checkPayment = async (req, res, next) => {
+    try {
+        const {omiseToken: token, courseItems} = req.body;
+        const user = req.user;
+        console.log(courseItems);
+        const sum = courseItems.reduce((sum, cur) => sum+(cur.price) , 0) // in dollars
+       
+       const customer = await omise.customers.create({
+           email: user.email,
+           description: user.firstName + user.lastName,
+           card: token
+       })
+       console.log(customer);
+    
+       const charge = await omise.charges.create({
+           amount: sum*100,
+           currency: "usd",
+           customer: customer.id
+       })
+       
+       for (let courseItem of courseItems) {
+           
+           const {id: courseId, price} = courseItem;
+           const course = await Course.findByPk(courseId)
+           const teacher = await course.getTeacher();
+           const creditCardNumber = teacher.creditCardNumber;
+           console.log(creditCardNumber)
+           const recipient = await omise.recipients.create({
+               name: teacher.firstName + ' '  +teacher.lastName,
+               email: teacher.email,
+               type: "individual",
+               bank_account: {
+                   number: creditCardNumber,
+                   name: teacher.firstName + ' '  +teacher.lastName,
+                   bank_code: "bbl"
+               }
+           });
+           //amount must be in cents
+           //I take half of the teachers' income
+           console.log("price = ------", price);
+           try {
+                amount = await USDtoTHB(Number(price));
+           } catch (err) {
+               console.log(err);
+               amount = Number(price) * 35;
+           }
+           //baht to satang
+           const transfer = await omise.transfers.create({
+               amount: Number(amount)*0.8*100,
+               recipient: recipient.id,
+               currency: "usd"
+           })
+           console.log("recipient: ------",recipient);
+           console.log("transfer:-------",transfer);
+           console.log("charge------->", charge)
+    
+        }
+        next();
+    } catch (err) {
+        next(err)
+    }
+
 }
