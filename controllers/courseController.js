@@ -156,20 +156,27 @@ exports.publicizeCourse = async (req, res, next) => {
  exports.getAllNotOwnedCourses = async (req, res, next) => {
      try {
          // get all registered course ids
-         
          const studentId = req.user.id;
          const ownIds = await getOwnedCourses(studentId);
          let courses = await Course.findAll({
-             include: {
+             include: [{
                  model: Teacher,
                  attributes: ["firstName", "lastName"]
-             },
+             }, 
+            //  {model: StudentCourse}
+            
+            ],
              where : {
                  id : {
                      [Op.notIn] : ownIds
                  },
                  isPublished: true
-             }
+             },
+            //  attributes: {
+            //      include: [sequelize.fn('COUNT', sequelize.col('studentLessons.id')), 'numberOfStudents']
+            //  },
+             
+            // group: "courseId"
          });
          //get all the index to find the video lengths in the video lesson table
          const courseIds = courses.map(course => course.id);
@@ -225,7 +232,7 @@ exports.publicizeCourse = async (req, res, next) => {
              course.totalLength = totalLengthObj[course.id] || 0;
              course.numberOfStudents = numbersOfStudentsObj[course.id] || 0; 
          })
-
+         console.log(courses);
          res.json({courses});
      } catch (err) {
          next(err);

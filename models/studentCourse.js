@@ -21,7 +21,22 @@ module.exports = (sequelize, DataTypes) => {
         price: {
             type: DataTypes.FLOAT,
             allowNull: false
+        },
+        studentId: {
+            type: DataTypes.STRING,
+            references: {
+              model: "students",
+              key: 'id'
+            }
+          },
+        courseId: {
+            type: DataTypes.STRING,
+            references: {
+              model: "courses", 
+              key: 'id'
+            }
         }
+        
     }, {
         indexes: [
             { fields: ['studentId', 'courseId'], unique: true }
@@ -29,3 +44,4 @@ module.exports = (sequelize, DataTypes) => {
     })
     return StudentCourse;
 }
+
