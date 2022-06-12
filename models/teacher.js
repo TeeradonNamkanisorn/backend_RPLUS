@@ -34,11 +34,18 @@ module.exports = (sequelize, DataTypes) => {
         lastName: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        creditCardName: {
+            type: DataTypes.STRING,
         }
     },{
         indexes:[
-            {unique:true, fields: ['email']
-        }]}
+            {
+                unique:true, fields: ['email']
+        }, {
+                unique: true, fields: ['creditCardNumber']
+        }
+    ]}
         );
 
     Teacher.associate = models => {

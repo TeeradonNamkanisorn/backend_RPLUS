@@ -63,7 +63,6 @@ exports.markLessonComplete = async (req, res, next) => {
     try {
         const studentId = req.user.id;
         const lessonId = req.params.lessonId;
-        const { status } = req.body;
     
         const lesson = await Lesson.findOne({where: {
             id: lessonId
@@ -79,19 +78,50 @@ exports.markLessonComplete = async (req, res, next) => {
         if (lesson.lessonType !== "video") {
             createError("Non-video lessons cannot be marked complete manually");
         }
-    
-        const studentLesson = await StudentLesson.create({
-            studentId,
-            lessonId,
-            status: "COMPLETED",
-            courseId: course.id,
-            id: uuidv4()
-        });
 
-        if (!studentLesson) {
-            createError("student's lesson not found", 400);
-        }
+        const existStudentLesson = await StudentLesson.findOne({where: {
+            studentId,
+            lessonId
+        }});
+
     
+        if (!existStudentLesson) {
+            const studentLesson = await StudentLesson.create({
+                studentId,
+                lessonId,
+                status: "COMPLETED",
+                courseId: course.id,
+                id: uuidv4()
+            });
+        } else {
+            //studentLesson already exists, update the entry instead
+            await StudentLesson.update({
+                status: "COMPLETED"
+            }, {where: {studentId, lessonId}})
+        }
+
+        
+    
+        res.sendStatus(204);
+    } catch (err) {
+        next(err)
+    }
+}
+
+exports.markLessonIncomplete = async (req, res, next) => {
+    try {
+        const studentId = req.user.id;
+        const lessonId = req.params.lessonId;
+
+        const studentLesson = await StudentLesson.findOne({where: {
+            studentId,
+            lessonId
+        }});
+
+
+
+        await studentLesson.destroy();
+
         res.sendStatus(204);
     } catch (err) {
         next(err)
@@ -228,7 +258,7 @@ exports.checkPayment = async (req, res, next) => {
                type: "individual",
                bank_account: {
                    number: creditCardNumber,
-                   name: teacher.firstName + ' '  +teacher.lastName,
+                   name: teacher.creditCardName,
                    bank_code: "bbl"
                }
            });
@@ -243,9 +273,8 @@ exports.checkPayment = async (req, res, next) => {
            }
            //baht to satang
            const transfer = await omise.transfers.create({
-               amount: Number(amount)*0.8*100,
+               amount: Number(amount)*0.5*100,
                recipient: recipient.id,
-               currency: "usd"
            })
            console.log("recipient: ------",recipient);
            console.log("transfer:-------",transfer);

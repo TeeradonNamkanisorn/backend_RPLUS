@@ -194,6 +194,13 @@ exports.updateVideoLesson = async (req, res, next) => {
         await Lesson.update({title},{ where:{id: lessonId}, transaction: t});
         await VideoLesson.update({title, description, url, videoPublicId, duration}, {where: {id : lessonId}, transaction: t});
 
+        //Changing the title or description should not have the student rewatch the lesson
+        //Change the status of students taken the lesson ONLY IF the content which is video is changed
+        if (req.uploadData) {
+            await StudentLesson.update({status: "PREVIOUSLY_COMPLETED"}, {where: {
+                lessonId
+            }, transaction: t})
+        }
         await t.commit();
 
         await course.changed('updatedAt', true);

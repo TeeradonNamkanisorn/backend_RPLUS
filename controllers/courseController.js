@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const {v4 : uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
-const { Course, Teacher, User, Chapter, sequelize, Lesson, VideoLesson, StudentLesson } = require("../models")
+const { Course, Teacher, User, Chapter, sequelize, Lesson, VideoLesson, StudentLesson, StudentCourse } = require("../models")
 const {Op} = require('sequelize');
 const createError = require('../utils/createError');
 const { destroy } = require('../utils/cloudinary');
@@ -40,8 +40,7 @@ try {
     const result = await Course.create({name, description, teacherId: userId, id: uuidv4(), level, imageLink: imageUrl, videoLink: videoUrl,
     imagePublicId: req.imageData.public_id, videoPublicId: req.imageData.public_id});
     
-    console.log("------------")
-    console.log(result);
+  
 
     res.send(result);
 } catch(err) {
@@ -53,20 +52,18 @@ exports.getCourseInfo = async (req, res, next) => {
     try {
         const courseId = req.params.id;
        
-        const course = await Course.findOne({where: {id: courseId}});
-        
-        const chapters = await Chapter.findAll({where: {courseId},
-                    include: {
-                        model: Lesson,
-                        include: {
-                            model: VideoLesson
-                        }
-                    }, 
-                    order: [["chapterIndex", "ASC"],[Lesson, "lessonIndex", "ASC"]]
-                   });
-        const teacher = await Teacher.findOne({where: {
-            id: course.teacherId
-        }, attributes: ["firstName", "lastName"]});
+        const course = await Course.findOne({where: {id: courseId},
+            include: [{
+                model: Chapter, 
+                include: {
+                    model: Lesson,
+                    include: VideoLesson
+                }}, {
+                    model: Teacher,
+                    attributes: ["firstName", "lastName"]
+                }],
+            order: [[Chapter, "chapterIndex", "ASC"], [Chapter, Lesson, "lessonIndex", "ASC"]]
+        });
         
         const objCourse = JSON.parse(JSON.stringify(course));
             
@@ -87,8 +84,6 @@ exports.getCourseInfo = async (req, res, next) => {
 
         res.json({course: {
             ...objCourse,
-            chapters,
-            teacher
         }});
     } catch (error) {
         next(error)
@@ -156,7 +151,8 @@ exports.publicizeCourse = async (req, res, next) => {
     }
  }
 
- //getAllCourse("own") or getAllCourse("notOwn")
+
+ //for students
  exports.getAllNotOwnedCourses = async (req, res, next) => {
      try {
          // get all registered course ids
@@ -199,9 +195,35 @@ exports.publicizeCourse = async (req, res, next) => {
          },{});
          
          courses = JSON.parse(JSON.stringify(courses));
+         
+         //fetch student numbers in order to sort by popularity on FRONTEND
+         let numbersOfStudents = await StudentCourse.findAll({
+             where: {
+                 courseId: {
+                     [Op.in] : courseIds
+                 }
+             },
+             attributes: [
+                 "courseId",
+                 [sequelize.fn('COUNT', sequelize.col('id')), 'studentCount']
+             ],
+             group: "courseId"
+         })
+         numbersOfStudents = JSON.parse(JSON.stringify(numbersOfStudents));
+         console.log(numbersOfStudents);
+
+         const numbersOfStudentsObj = numbersOfStudents.reduce( (acc, cur) => {
+            acc[cur.courseId] = cur.studentCount;
+            return acc
+        },{});
+
+
+
+
          //set total length key for all the fetched courses
          courses.forEach(course => {
              course.totalLength = totalLengthObj[course.id] || 0;
+             course.numberOfStudents = numbersOfStudentsObj[course.id] || 0; 
          })
 
          res.json({courses});
@@ -229,13 +251,14 @@ exports.publicizeCourse = async (req, res, next) => {
             }
         });
 
-        console.log()
+    
         let numberCompleted = await StudentLesson.findAll({
             where: {
                 courseId: {
                     [Op.in] : ownIds
                 },
-                studentId
+                studentId,
+                status: "COMPLETED"
             },
             attributes: [
                 "courseId",
@@ -315,16 +338,26 @@ exports.publicizeCourse = async (req, res, next) => {
            where: {
                id: courseId
            },
-           include: {
+           include: [{
                model: Teacher,
-               attributs: ["firstName", "lastName"]
-           }
+               attributes: ["firstName", "lastName"]
+           }, {
+               model: Chapter,
+               include: {
+                   model: Lesson,
+                   include: VideoLesson
+               }
+           }],
+           order: [[Chapter, "chapterIndex", "ASC"],[Chapter, Lesson, 'lessonIndex', "ASC"]]
        });
+
+       if (!course) createError("course not found", 400);
 
        const numberCompleted = await StudentLesson.count({
            where: {
                courseId,
-               studentId
+               studentId,
+               status: "COMPLETED"
            }
        });
 
@@ -341,11 +374,34 @@ exports.publicizeCourse = async (req, res, next) => {
                courseId
            }
        });
+
+       let completedLessons = await StudentLesson.findAll({where: {
+           studentId,
+           courseId,
+           status: "COMPLETED"
+       },
+        attributes: ["lessonId"]});
+        // [{lessonId: "id1"}, {lessonId: "id2"} ]
+       completedLessons = JSON.parse(JSON.stringify(completedLessons));
+       completedLessons = completedLessons.map(el => el.lessonId);
+
+       let previouslyCompletedLessons = await StudentLesson.findAll({where: {
+           studentId,
+           courseId,
+           status: "PREVIOUSLY_COMPLETED"
+       }, attributes: ["lessonId"]});
+       previouslyCompletedLessons = JSON.parse(JSON.stringify(previouslyCompletedLessons));
+       previouslyCompletedLessons = previouslyCompletedLessons.map(el => el.lessonId);
+    
+        console.log(previouslyCompletedLessons);
    
        course = JSON.parse(JSON.stringify(course));
-       course.numberCompleted = numberCompleted;
+       
+       course.numberCompleted = numberCompleted || 0;
        course.numberLesson = numberLesson;
        course.totalLength = totalLength;
+       course.completedLessons = completedLessons;
+       course.previouslyCompletedLessons = previouslyCompletedLessons;
 
        res.json({course});
 

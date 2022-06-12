@@ -15,11 +15,14 @@ courseRouter.get('/owned', jwtAuthenticator("student"), courseController.getStud
 
 courseRouter.get("/", jwtAuthenticator("student"),courseController.getAllNotOwnedCourses)
 
+courseRouter.get("/as-student/:courseId", jwtAuthenticator("student"), courseController.getStudentOwnedCourseById)
+
 courseRouter.post('/', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadVidAndImageToCloudMW , courseController.createCourse);
 
 courseRouter.put('/:courseId', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadEitherOrBothVideoAndImageToCloudMW , courseController.updateCourse)
 
 courseRouter.patch('/:courseId', jwtAuthenticator("teacher"), courseController.publicizeCourse);
+
 courseRouter.get('/:id', jwtAuthenticator(), courseController.getCourseInfo);
 
 module.exports = courseRouter;
