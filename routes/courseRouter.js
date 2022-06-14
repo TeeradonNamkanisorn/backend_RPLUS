@@ -1,28 +1,61 @@
-const express = require('express');
+const express = require("express");
 
-const courseController = require('../controllers/courseController');
-const jwtAuthenticator = require('../middlewares/jwtAuthenticator');
-const { uploadPreviewMedia } = require('../services/multerUploads');
-const { uploadVidAndImageToCloudMW, uploadEitherOrBothVideoAndImageToCloudMW  } = require('../utils/cloudinary');
-
+const courseController = require("../controllers/courseController");
+const jwtAuthenticator = require("../middlewares/jwtAuthenticator");
+const { uploadPreviewMedia } = require("../services/multerUploads");
+const {
+  uploadVidAndImageToCloudMW,
+  uploadEitherOrBothVideoAndImageToCloudMW,
+} = require("../utils/cloudinary");
 
 const courseRouter = express.Router();
 
+courseRouter.get(
+  "/owned",
+  jwtAuthenticator("student"),
+  courseController.getStudentOwnedCourses
+);
 
+courseRouter.get(
+  "/",
+  jwtAuthenticator("student"),
+  courseController.getAllNotOwnedCourses
+);
 
+courseRouter.get(
+  "/as-student/:courseId",
+  jwtAuthenticator("student"),
+  courseController.getStudentOwnedCourseById
+);
 
-courseRouter.get('/owned', jwtAuthenticator("student"), courseController.getStudentOwnedCourses)
+courseRouter.post(
+  "/",
+  jwtAuthenticator("teacher"),
+  uploadPreviewMedia,
+  uploadVidAndImageToCloudMW,
+  courseController.createCourse
+);
 
-courseRouter.get("/", jwtAuthenticator("student"),courseController.getAllNotOwnedCourses)
+courseRouter.put(
+  "/:courseId",
+  jwtAuthenticator("teacher"),
+  uploadPreviewMedia,
+  uploadEitherOrBothVideoAndImageToCloudMW,
+  courseController.updateCourse
+);
 
-courseRouter.get("/as-student/:courseId", jwtAuthenticator("student"), courseController.getStudentOwnedCourseById)
+courseRouter.patch(
+  "/:courseId/price",
+  jwtAuthenticator("teacher"),
+  courseController.changePrice
+);
 
-courseRouter.post('/', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadVidAndImageToCloudMW , courseController.createCourse);
+courseRouter.patch(
+  "/:courseId",
+  jwtAuthenticator("teacher"),
+  courseController.publicizeCourse
+);
 
-courseRouter.put('/:courseId', jwtAuthenticator("teacher"), uploadPreviewMedia, uploadEitherOrBothVideoAndImageToCloudMW , courseController.updateCourse)
-
-courseRouter.patch('/:courseId', jwtAuthenticator("teacher"), courseController.publicizeCourse);
-
-courseRouter.get('/:id', jwtAuthenticator(), courseController.getCourseInfo);
+courseRouter.get("/:id", jwtAuthenticator(), courseController.getCourseInfo);
 
 module.exports = courseRouter;

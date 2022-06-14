@@ -37,6 +37,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         creditCardName: {
             type: DataTypes.STRING,
+        },
+        bankCode: {
+            type: DataTypes.STRING,
+            defaultValue: "bbl"
         }
     },{
         indexes:[

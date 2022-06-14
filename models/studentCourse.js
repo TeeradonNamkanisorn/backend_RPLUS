@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         status: {
-            type: DataTypes.ENUM('NOT_COMPLETED','PREVIOUSLY COMPLETED','COMPLETED'),
+            type: DataTypes.ENUM('NOT_COMPLETED','PREVIOUSLY_COMPLETED','COMPLETED'),
             defaultValue: "NOT_COMPLETED"
         },
         certificateUrl: {
@@ -43,5 +43,6 @@ module.exports = (sequelize, DataTypes) => {
           ]
     })
     return StudentCourse;
+    //
 }
 
