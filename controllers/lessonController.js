@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const {v4 : uuidv4} = require('uuid');
-const { Lesson, Chapter, Course, VideoLesson, sequelize, StudentLesson } = require("../models");
+const { Lesson, Chapter, Course, VideoLesson, sequelize, StudentLesson, StudentCourse } = require("../models");
 const { Op } = require('sequelize');
 const { destroy } = require('../utils/cloudinary');
 const createError = require('../utils/createError');
@@ -144,6 +144,13 @@ module.exports.appendVideoLesson = async (req, res, next) => {
             transaction : t
         });
 
+        await StudentCourse.update({status: "PREVIOUSLY_COMPLETED"}, {
+            where: {
+                courseId,
+                status: "COMPLETED"
+            }
+        })
+
         await course.changed('updatedAt', true);
         await t.commit();
 
@@ -200,6 +207,13 @@ exports.updateVideoLesson = async (req, res, next) => {
             await StudentLesson.update({status: "PREVIOUSLY_COMPLETED"}, {where: {
                 lessonId
             }, transaction: t})
+
+            await StudentCourse.update({status: "PREVIOUSLY_COMPLETED"}, {
+                where: {
+                    courseId,
+                    status: "COMPLETED"
+                }, transaction: t
+            })
         }
         await t.commit();
 

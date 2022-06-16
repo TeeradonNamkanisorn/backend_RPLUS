@@ -156,6 +156,22 @@ exports.validateComplete = async (req, res, next) => {
     if (lessonsCompleted < lessonCount)
       createError("You are have not taken all the lessons");
 
+    //If the status is "completed", then don't upload a new file to cloudinary.
+    // Use the existing link(out dated but "previously completed").
+    //Teacher adding lessons will change the status to previously completed, in which case the student has to re-verify the certificate.
+    //Which will change the status back to completed if all the lessons are done.
+    const studentCourse = await StudentCourse.findOne({
+      where: {
+        studentId,
+        courseId
+      }
+    })
+
+    if (studentCourse.status === "PREVIOUSLY_COMPLETED") {
+      return res.json({status: "PREVIOUSLY_COMPLETED"});
+    } else if (studentCourse.status === "COMPLETED") {
+      return res.json({status: "ALREADY_COMPLETED"})
+    }
     //student info is already in req.user
     next();
   } catch (err) {
@@ -203,7 +219,7 @@ exports.getCertficate = async (req, res, next) => {
   }
 };
 
-exports.sendCertificate = async (req, res, next) => {
+exports.sendCertificateStatus = async (req, res, next) => {
   try {
     const courseId = req.params.courseId;
     const studentId = req.user.id;
@@ -225,12 +241,10 @@ exports.sendCertificate = async (req, res, next) => {
     if (!req.date) createError("NO date has been passed down", 500);
     studentCourse.latestCompletedDate = req.date;
     console.log(req.date);
+    studentCourse.status="COMPLETED";
     await studentCourse.save();
     res.json({
-      certificate: {
-        url: studentCourse.certificateUrl,
-        latestDate: studentCourse.latestCompletedDate,
-      },
+      status: "JUST_COMPLETED"
     });
   } catch (error) {
     next(error);

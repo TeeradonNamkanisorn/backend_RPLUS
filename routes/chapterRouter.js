@@ -12,6 +12,8 @@ chapterRouter.post("/appendChapter", jwtAuthenticator("teacher"), chapterControl
 chapterRouter.post('/insertChapter', jwtAuthenticator("teacher"), chapterController.insertChapterByIndex);
 
 chapterRouter.delete('/:chapterId', jwtAuthenticator("teacher"), chapterController.deleteChapter);
+
+chapterRouter.patch('/swapIndex', jwtAuthenticator("teacher"), chapterController.swapChapters)
 // chapterRouter.get('/:courseId', jwtAuthenticator("teacher"), chapterController.getAllChapters);
 
 module.exports = chapterRouter;

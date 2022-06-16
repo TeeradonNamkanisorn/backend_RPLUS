@@ -66,7 +66,7 @@ exports.createCourse = async (req, res, next) => {
 exports.getCourseInfo = async (req, res, next) => {
   try {
     const courseId = req.params.id;
-
+    
     const course = await Course.findOne({
       where: { id: courseId },
       include: [
@@ -119,7 +119,7 @@ exports.getCourseInfo = async (req, res, next) => {
 exports.updateCourse = async (req, res, next) => {
   try {
     const { name, description, level, price } = req.body;
-
+    
     const { id: userId } = req.user;
     const { courseId } = req.params;
 
@@ -468,7 +468,7 @@ module.exports.getStudentOwnedCourseById = async (req, res, next) => {
       (el) => el.lessonId
     );
 
-    console.log(previouslyCompletedLessons);
+
 
     course = JSON.parse(JSON.stringify(course));
 

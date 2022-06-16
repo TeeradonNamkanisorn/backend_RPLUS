@@ -7,7 +7,7 @@ const { uploadPdf } = require('../utils/cloudinary');
 
 router.post('/lesson/:lessonId', studentController.markLessonComplete);
 
-router.get('/cert/:courseId', studentController.validateComplete, studentController.getCertficate, uploadPdf, studentController.sendCertificate )
+router.post('/cert/:courseId', studentController.validateComplete, studentController.getCertficate, uploadPdf, studentController.sendCertificateStatus )
 router.delete('/lesson/:lessonId', studentController.markLessonIncomplete);
 router.post('/course/buy', studentController.checkPayment, studentController.buyCourses)
 module.exports = router;

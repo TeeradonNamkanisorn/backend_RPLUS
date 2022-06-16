@@ -176,3 +176,39 @@ exports.deleteChapter = async (req, res, next) => {
         next(err)
     }
 }
+
+exports.swapChapters = async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+        const {inputChapters} = req.body;
+        // [{index: 1, id: "abc"}, {index: 2, id: "def"}]
+        const {index: index1, id: id1} = inputChapters[0]
+        const {index: index2, id: id2} = inputChapters[1]
+
+        const chapter1 = await Chapter.findByPk(id1);
+        const chapter2 = await Chapter.findByPk(id2);
+
+        if (chapter1.courseId !== chapter2.courseId) createError("chapters must be on the same course", 400);
+        const courseId = chapter1.courseId;
+
+        //get the new index for the first chapter
+        await Chapter.update({chapterIndex: index2}, {
+            where: {id: id1},
+            transaction : t
+        })
+        //swap for the second as well
+        await Chapter.update({chapterIndex: index1}, {
+            where: {id: id2}, 
+            transaction: t
+        })
+
+
+        await t.commit();
+
+        res.sendStatus(204);
+
+    } catch (err) {
+        await t.rollback();
+        next(err)
+    }
+}
