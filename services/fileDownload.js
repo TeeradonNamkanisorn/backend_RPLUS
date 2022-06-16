@@ -1,9 +1,9 @@
 const download = require('download');
 
-// File URL
-const url = `https://acquirebase.com/img/logo.png`;
+const downloadFromUrl = async (url, dest, filename) => {
+    await download(url, dest, {
+        filename
+    });
+}
 
-// Download the file
-(async () => {
-    await download(url, './');
-})();
+module.exports = downloadFromUrl;

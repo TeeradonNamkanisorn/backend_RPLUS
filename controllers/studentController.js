@@ -12,10 +12,13 @@ const createError = require("../utils/createError");
 const ejs = require("ejs");
 const pdf = require("html-pdf");
 const util = require("util");
-const { destroy } = require("../utils/cloudinary");
-const { clearCertificateDir } = require("../services/clearFolder");
+const { destroy, cloudinary, upload } = require("../utils/cloudinary");
+const { clearCertificateDir, clearMediaLocal } = require("../services/clearFolder");
 const omise = require("../utils/omise");
 const { USDtoTHB } = require("../services/currencyConverter");
+const downloadFromUrl = require('../services/fileDownload')
+const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const renderFile = util.promisify(ejs.renderFile);
 
@@ -28,6 +31,8 @@ const createPdf = (data, options) =>
         resolve(success);
       });
   });
+
+
 
 exports.buyCourses = async (req, res, next) => {
   const t = await sequelize.transaction();
@@ -152,9 +157,6 @@ exports.validateComplete = async (req, res, next) => {
         courseId,
       },
     });
-    if (lessonCount === 0) createError("no lessons found");
-    if (lessonsCompleted < lessonCount)
-      createError("You are have not taken all the lessons");
 
     //If the status is "completed", then don't upload a new file to cloudinary.
     // Use the existing link(out dated but "previously completed").
@@ -167,11 +169,19 @@ exports.validateComplete = async (req, res, next) => {
       }
     })
 
-    if (studentCourse.status === "PREVIOUSLY_COMPLETED") {
+    if (studentCourse.status === "PREVIOUSLY_COMPLETED" && (lessonsCompleted < lessonCount)) {
       return res.json({status: "PREVIOUSLY_COMPLETED"});
     } else if (studentCourse.status === "COMPLETED") {
       return res.json({status: "ALREADY_COMPLETED"})
     }
+
+    
+    if (lessonCount === 0) createError("no lessons found");
+    if (lessonsCompleted < lessonCount) {
+      return res.json({
+        status: "NOT_COMPLETED"
+      })
+    };
     //student info is already in req.user
     next();
   } catch (err) {
@@ -312,3 +322,33 @@ exports.checkPayment = async (req, res, next) => {
     next(err);
   }
 };
+
+
+exports.downloadCertificate = async (req, res, next) => {
+  try {
+    const courseId = req.params.courseId;
+    const studentId = req.user.id;
+
+    const studentCourse = await StudentCourse.findOne({where: {
+      studentId,
+      courseId
+    }});
+
+    if (!studentCourse.certificateUrl) createError("Student must complete all the lessons before requesting the certificate", 403);
+    if (!studentCourse) createError("student and course do not match", 400);
+
+    const certificateUrl = studentCourse.certificateUrl;
+
+    const tempFilename = uuidv4()+".pdf";
+    await downloadFromUrl(certificateUrl, './media', tempFilename);
+
+    res.download("./media/"+tempFilename);
+    
+  } catch (error) {
+    next(error)
+  } finally {
+    clearMediaLocal();
+  }
+
+  
+}

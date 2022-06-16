@@ -5,6 +5,9 @@ const createError = require("../utils/createError");
 require("dotenv").config();
 const { v4: uuidv4 } = require("uuid");
 const validator = require("validator");
+const { upload } = require("../utils/cloudinary");
+const { clearMediaLocal } = require("../services/clearFolder");
+
 
 //Route default to both teacher and students
 module.exports.loginUser = async (req, res, next) => {
@@ -56,9 +59,9 @@ module.exports.loginUser = async (req, res, next) => {
 module.exports.getUser = async (req, res, next) => {
   try {
     //Validator middleware needs to attach req.user to the request first
-    const { userId: id, email, username, role } = req.user;
+    const { userId: id, email, username, role, firstName, lastName, imageUrl } = req.user;
     console.log(req.user);
-    res.json({ id, email, username, role });
+    res.json({ id, email, username, role, firstName, lastName, imageUrl });
   } catch (error) {
     next(error);
   }
@@ -159,3 +162,54 @@ exports.registerStudent = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const {username, oldpassword, newpassword, firstName, lastName} = req.body;
+    
+    let newHashedPw
+    if (oldpassword) {
+      if (!newpassword) createError("new password is required", 400);
+      const isCorrect = await bcrypt.compare(oldpassword, req.user.password);
+      if (!isCorrect) createError("Invalid credentials", 400);
+
+      newHashedPw = await bcrypt.hash(newpassword,10);
+
+    }
+
+    console.log(req.file)
+    let imageUrl;
+    let imagePublicId;
+    if (req.file) {
+      const result = await upload(req.file.path);
+      console.log(result);
+
+      //delete the existing profile pic
+      if (req.user.imageUrl) {
+        const response = await destroy(req.user.imagePublicId);
+        console.log(response);
+      }
+
+      imageUrl = result.secure_url;
+      imagePublicId = result.public_id
+
+    }
+
+    
+    if (req.user.role === "student") await Student.update({username, password: newHashedPw, firstName, lastName, imageUrl, imagePublicId}, {
+      where: {
+        email: req.user.email
+      }
+    });
+    if (req.user.role === "teacher") await Teacher.update({username, password: newHashedPw, firstName, lastName, imageUrl, imagePublicId}, {
+      email: req.user.email
+    });
+
+    res.sendStatus(204);
+    
+  } catch (err) {
+    next(err)
+  } finally {
+    clearMediaLocal();
+  }
+}
