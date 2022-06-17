@@ -30,7 +30,7 @@ const jwtAuthenticator= (userRole = "all") => async (req, res, next) => {
         // create an error if userRole do not match
         console.log(role, userRole);
         if ((userRole !== "all") && (userRole !== role)) createError("Invalid user role", 403); 
-        //any functions that come after can use req.body to get user data
+        //any functions that come after can use req.user to get user data
         const newUser = JSON.parse(JSON.stringify(user));
         newUser.role = role;
         req.user = newUser;

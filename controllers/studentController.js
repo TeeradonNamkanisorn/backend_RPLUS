@@ -295,15 +295,15 @@ exports.checkPayment = async (req, res, next) => {
       const { id: courseId, price } = courseItem;
       const course = await Course.findByPk(courseId);
       const teacher = await course.getTeacher();
-      const creditCardNumber = teacher.creditCardNumber;
-      console.log(creditCardNumber);
+      const bankAccountNumber = teacher.bankAccountNumber;
+     
       const recipient = await omise.recipients.create({
         name: teacher.firstName + " " + teacher.lastName,
         email: teacher.email,
         type: "individual",
         bank_account: {
-          number: creditCardNumber,
-          name: teacher.creditCardName,
+          number: bankAccountNumber,
+          name: teacher.bankAccountName,
           bank_code: teacher.bankCode,
         },
       });

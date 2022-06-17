@@ -279,7 +279,7 @@ exports.getAllNotOwnedCourses = async (req, res, next) => {
     //Sort the courses based on the query params received;
     if (req.query.keyword) {
       courses = courses.filter((course) =>
-        course.name.includes(req.query.keyword)
+        course.name.toLowerCase().includes(req.query.keyword.toLowerCase())
       );
     }
     if (req.query.popularity === "true") {

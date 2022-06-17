@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             primaryKey: true
         },
-        creditCardNumber: {
+        bankAccountNumber: {
             type: DataTypes.STRING,
             allowNull: false
         },
@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-        creditCardName: {
+        bankAccountName: {
             type: DataTypes.STRING,
         },
         bankCode: {
@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
             {
                 unique:true, fields: ['email']
         }, {
-                unique: true, fields: ['creditCardNumber']
+                unique: true, fields: ['bankAccountNumber']
         }
     ]}
         );

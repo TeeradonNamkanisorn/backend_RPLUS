@@ -80,8 +80,8 @@ exports.registerTeacher = async (req, res, next) => {
       password,
       firstName,
       lastName,
-      creditCardNumber,
-      creditCardName,
+      bankAccountNumber,
+      bankAccountName,
       bankCode,
     } = req.body;
 
@@ -90,9 +90,8 @@ exports.registerTeacher = async (req, res, next) => {
     if (!password) createError("Password is required", 400);
     if (!firstName) createError("First name is required", 400);
     if (!lastName) createError("Last name is required", 400);
-    if (!creditCardName) createError("Name on credit card is required", 400);
-    if (!creditCardNumber) createError("Credit card number is required", 400);
-    if (!validator.isCreditCard(creditCardNumber))
+    if (!bankAccountName) createError("Name on credit card is required", 400);
+    if (!bankAccountNumber) createError("Credit card number is required", 400);
       createError("Invalid credit card number", 400);
     if (!bankCode) createError("Bank code is required", 400);
 
@@ -110,8 +109,8 @@ exports.registerTeacher = async (req, res, next) => {
       password: hashedPassword,
       firstName,
       lastName,
-      creditCardNumber,
-      creditCardName,
+      bankAccountNumber,
+      bankAccountName,
       bankCode,
     });
 
