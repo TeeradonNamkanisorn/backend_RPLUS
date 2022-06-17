@@ -50,7 +50,8 @@ exports.buyCourses = async (req, res, next) => {
       studentId,
       courseId: el.id,
       price: el.price,
-      chargeId: req.chargeId
+      chargeId: req.chargeId,
+      teacherEarningTHB: req.transferAmount[el.id]
     }));
 
 
@@ -288,7 +289,8 @@ exports.checkPayment = async (req, res, next) => {
       currency: "usd",
       customer: customer.id,
     });
-
+    
+    const transferAmountObj = {};
     for (let courseItem of courseItems) {
       const { id: courseId, price } = courseItem;
       const course = await Course.findByPk(courseId);
@@ -315,16 +317,20 @@ exports.checkPayment = async (req, res, next) => {
         amount = Number(price) * 35;
       }
       //baht to satang
+
       const transfer = await omise.transfers.create({
         amount: Number(amount) * 0.5 * 100,
         recipient: recipient.id,
       });
+      //transfer ; {amount: 20000}
+      transferAmountObj[courseItem.id] = transfer.amount/100 || 0;
       console.log("recipient: ------", recipient);
       console.log("transfer:-------", transfer);
       console.log("charge------->", charge);
 
     }
     req.chargeId = charge.id;
+    req.transferAmount = transferAmountObj;
     next();
   } catch (err) {
     next(err);
@@ -362,15 +368,21 @@ exports.downloadCertificate = async (req, res, next) => {
 
 exports.fetchTransactionsAsStudent = async (req, res, next) => {
   try {
-    const studentCourses = await Student.findOne({where: {
+    const student = await Student.findOne({where: {
       id: req.user.id,
     },
-      include: Course,
+      include: {
+        model: Course,
+        attributes: ["id", "name"],
+        through: {
+          attributes: ["chargeId", "price", "createdAt"]
+        }
+      },
       attributes: ["firstName", "lastName", "id"],
     })
 
   res.json({
-    transactions: studentCourses
+    student
   })
 
   } catch (err) {

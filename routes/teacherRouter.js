@@ -10,7 +10,7 @@ const teacherRouter = express.Router();
 
 teacherRouter.get('/courses', jwtAuthenticator("teacher"), teacherController.getAllCourses);
 
-
+teacherRouter.get('/transactions/', jwtAuthenticator('teacher'), teacherController.getTransactionsAsTeacher);
 
 
 
