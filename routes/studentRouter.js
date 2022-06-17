@@ -12,5 +12,5 @@ router.post('/cert/:courseId', studentController.validateComplete, studentContro
 router.delete('/lesson/:lessonId', studentController.markLessonIncomplete);
 router.post('/course/buy', studentController.checkPayment, studentController.buyCourses);
 router.get('/cert/:courseId', studentController.downloadCertificate);
-
+router.get('/transactions/', studentController.fetchTransactionsAsStudent)
 module.exports = router;

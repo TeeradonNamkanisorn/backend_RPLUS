@@ -5,6 +5,7 @@ const {
   StudentCourse,
   Lesson,
   VideoLesson,
+  Teacher,
   StudentLesson,
 } = require("../models");
 const { v4: uuidv4 } = require("uuid");
@@ -49,7 +50,10 @@ exports.buyCourses = async (req, res, next) => {
       studentId,
       courseId: el.id,
       price: el.price,
+      chargeId: req.chargeId
     }));
+
+
 
     const studentCourses = await StudentCourse.bulkCreate(courseArray, {
       transaction: t,
@@ -65,6 +69,8 @@ exports.buyCourses = async (req, res, next) => {
     next(error);
   }
 };
+
+//chrg_test_5s653z9maihdgh5qwky
 
 exports.markLessonComplete = async (req, res, next) => {
   try {
@@ -316,7 +322,9 @@ exports.checkPayment = async (req, res, next) => {
       console.log("recipient: ------", recipient);
       console.log("transfer:-------", transfer);
       console.log("charge------->", charge);
+
     }
+    req.chargeId = charge.id;
     next();
   } catch (err) {
     next(err);
@@ -350,5 +358,22 @@ exports.downloadCertificate = async (req, res, next) => {
     clearMediaLocal();
   }
 
-  
+}
+
+exports.fetchTransactionsAsStudent = async (req, res, next) => {
+  try {
+    const studentCourses = await Student.findOne({where: {
+      id: req.user.id,
+    },
+      include: Course,
+      attributes: ["firstName", "lastName", "id"],
+    })
+
+  res.json({
+    transactions: studentCourses
+  })
+
+  } catch (err) {
+    next(err)
+  }
 }

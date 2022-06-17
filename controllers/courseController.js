@@ -37,6 +37,8 @@ exports.createCourse = async (req, res, next) => {
   // PAYLOAD required
   // HEADERS: {authorization: BEARER __TOKEN} : TOKEN WITH USER_ID, ROLE, USERNAME AND EMAIL
   // MUST BE AUTHENTICATED TO BE ABLE TO ACCESS REQ.USER
+
+  
   try {
     const { name, description, level } = req.body;
 
@@ -118,6 +120,7 @@ exports.getCourseInfo = async (req, res, next) => {
 
 exports.updateCourse = async (req, res, next) => {
   try {
+   
     const { name, description, level, price } = req.body;
     
     const { id: userId } = req.user;

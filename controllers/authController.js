@@ -50,6 +50,9 @@ module.exports.loginUser = async (req, res, next) => {
       email: user.email,
       token,
       role: role,
+      imageUrl: user.imageUrl,
+      firstName: user.firstName,
+      lastName: user.lastName
     });
   } catch (err) {
     next(err);

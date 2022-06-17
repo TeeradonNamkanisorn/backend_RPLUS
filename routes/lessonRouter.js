@@ -14,4 +14,5 @@ lessonRouter.delete('/video/:lessonId', jwtAuthenticator("teacher"), lessonContr
 
 lessonRouter.put('/video/:lessonId', jwtAuthenticator("teacher"), uploadLocal.single("lessonVideo"), lessonController.verifyUpdateLesson, uploadVideoToCloudMW, lessonController.updateVideoLesson);
 
+lessonRouter.patch('/swapIndex', lessonController.swapLesson);
 module.exports = lessonRouter;

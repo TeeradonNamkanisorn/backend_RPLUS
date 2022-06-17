@@ -69,6 +69,7 @@ module.exports.verifyUpdateLesson = async (req, res, next) => {
 module.exports.deleteVideoLesson = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
+        
         const { lessonId } = req.params
         const videoLesson = await VideoLesson.findByPk(lessonId);
         const lesson = await Lesson.findByPk(lessonId);
@@ -176,6 +177,7 @@ exports.updateVideoLesson = async (req, res, next) => {
     //params: lessonId
     const t = await sequelize.transaction();
     try {
+        
         const {title, description} = req.body;
         const url = req.uploadData?.secure_url;
         const duration = req.uploadData?.duration;
@@ -232,6 +234,49 @@ exports.updateVideoLesson = async (req, res, next) => {
             duration
         }})
        
+
+    } catch (err) {
+        await t.rollback();
+        next(err)
+    }
+}
+
+
+
+
+exports.swapLesson = async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+        
+        const {inputLessons} = req.body;
+        
+        // [{index: 1, id: "abc"}, {index: 2, id: "def"}]
+        const {index: index1, id: id1} = inputLessons[0]
+        const {index: index2, id: id2} = inputLessons[1]
+
+        const lesson1 = await Lesson.findByPk(id1);
+        const lesson2 = await Lesson.findByPk(id2);
+
+        if (lesson1.courseId !== lesson2.courseId) createError("lessons must be on the same course", 400);
+        if (lesson1.chapterId !== lesson2.chapterId) createError("lessons must be on the same chapter", 400);
+        
+        const courseId = lesson1.courseId;
+
+        //get the new index for the first chapter
+        await Lesson.update({lessonIndex: index2}, {
+            where: {id: id1},
+            transaction : t
+        })
+        //swap for the second as well
+        await Lesson.update({lessonIndex: index1}, {
+            where: {id: id2}, 
+            transaction: t
+        })
+
+
+        await t.commit();
+
+        res.sendStatus(204);
 
     } catch (err) {
         await t.rollback();

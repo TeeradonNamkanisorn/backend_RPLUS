@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.FLOAT,
             allowNull: false
         },
+        chargeId: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
         studentId: {
             type: DataTypes.STRING,
             references: {

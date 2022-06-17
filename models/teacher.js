@@ -25,7 +25,8 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         creditCardNumber: {
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            allowNull: false
         },
         firstName: {
             type: DataTypes.STRING,
