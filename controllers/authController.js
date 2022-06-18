@@ -92,7 +92,6 @@ exports.registerTeacher = async (req, res, next) => {
     if (!lastName) createError("Last name is required", 400);
     if (!bankAccountName) createError("Name on credit card is required", 400);
     if (!bankAccountNumber) createError("Credit card number is required", 400);
-      createError("Invalid credit card number", 400);
     if (!bankCode) createError("Bank code is required", 400);
 
     const newId = uuidv4();
